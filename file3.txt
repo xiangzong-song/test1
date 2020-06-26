@@ -1,2 +1,2 @@
 this is file3.
-AAAAAAAAaaaaaaaaaaaaaaa
+这是branch1的file3.
