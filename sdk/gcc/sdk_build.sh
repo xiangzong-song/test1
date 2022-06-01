@@ -1,19 +1,39 @@
 #!/bin/sh
-#copy ota file sdk
-prj_path=$(pwd)
 
-frq_sdk_path_line=$(cat Makefile| grep ^SDK_ROOT\ )
-frq_sdk_path_=${frq_sdk_path_line#*=}
-frq_sdk_path_=`eval echo $frq_sdk_path_|tr -d '\\r'`
-frq_sdk_path=`eval echo $frq_sdk_path_`
+BUILD_PATH=$(pwd)
+PLATFORM_TYPE=FR8016
+PLATFORM_NAME=ESD_FR801xH-Platform
 
-frq_sdk_patch="/../sdk_patch"
-echo "FREQ_SDK_PATH  = $frq_sdk_path"
-echo "FREQ_SDK_PATCH = $frq_sdk_path$frq_sdk_patch"
-cd $frq_sdk_path$frq_sdk_patch && sh sdk_patch.sh
-cd $prj_path
-echo "make clean and make"
-make clean && make
+if [ ! -z $1 ]; then
+    if [ $1 = "FR8016" ]; then
+        PLATFORM_TYPE=FR8016
+        PLATFORM_NAME=ESD_FR801xH-Platform
+    elif [ $1 = "FR5089" ]; then
+        PLATFORM_TYPE=FR5089
+        PLATFORM_NAME=ESD_FR5089_Platform
+    else
+        echo "Error : invalid platform '$1'"
+        exit
+    fi 
+fi
+
+echo $PLATFORM_TYPE
+echo $PLATFORM_NAME
+
+SDK_PATH_LINE=$(cat Makefile| grep ^SDK_ROOT\ )
+SDK_PATH_TEXT=${SDK_PATH_LINE#*=}
+SDK_PATH=${SDK_PATH_TEXT/'$(PLATFORM_PATH)'/$PLATFORM_NAME}
+SDK_PATCH="/../sdk_patch"
+SDK_PATCH_PATH=$SDK_PATH$SDK_PATCH
+
+if [ $PLATFORM_TYPE = "FR8016" ]; then
+    cd $SDK_PATCH_PATH && sh sdk_patch.sh
+fi
+
+cd $BUILD_PATH
+echo "make clean and make platform=$PLATFORM_TYPE"
+
+make clean && make platform=$PLATFORM_TYPE
 if [ $? -ne "0" ]; then
     echo "make failed!!! please Check error"
     exit
