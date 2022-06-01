@@ -4,7 +4,7 @@ include $(TEMPLATE_PATH)/Makefile.param
 PROJECT_NAME     := Govee_SDK_Lib
 TARGETS          :=$(MODULES_NAME)
 OUTPUT_DIRECTORY := build
-SDK_ROOT         := ../../platform/Freq_SDK/sdk
+SDK_ROOT         := ../../platform/ESD_FR801xH-Platform/Freq_SDK/sdk
 GOVEE_SDK_SRC    := ../code/
 LINKER_SCRIPT    := ldscript.ld
 
