@@ -1,0 +1,6 @@
+[submodule "platform/ESD_FR5089_Platform"]
+	path = platform/ESD_FR5089_Platform
+	url = git@github.com:wenlong-ihoment/ESD_FR5089_Platform.git
+[submodule "platform/ESD_FR801xH-Platform"]
+	path = platform/ESD_FR801xH-Platform
+	url = git@github.com:wenlong-ihoment/ESD_FR801xH-Platform.git

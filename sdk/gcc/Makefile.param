@@ -1,0 +1,32 @@
+MODULES_NAME += Govee_Light_SDK
+
+EASY_FLASH_ENABLE := 1
+
+ifeq ($(EASY_FLASH_ENABLE), 1)
+    GOVEE_SDK_FILE_DIRS += sdk/library/config/easyflash/inc
+    GOVEE_SDK_FILE_DIRS += sdk/library/config/easyflash/port
+    GOVEE_SDK_FILE_DIRS += sdk/library/config/easyflash/src
+endif
+
+
+GOVEE_SDK_FILE_DIRS += hal/gpio
+GOVEE_SDK_FILE_DIRS += hal/pwm
+GOVEE_SDK_FILE_DIRS += hal/os
+
+GOVEE_SDK_FILE_DIRS += sdk/library/watchdog
+GOVEE_SDK_FILE_DIRS += sdk/library/time
+GOVEE_SDK_FILE_DIRS += sdk/library/log
+GOVEE_SDK_FILE_DIRS += sdk/library/utils
+GOVEE_SDK_FILE_DIRS += sdk/library/led
+GOVEE_SDK_FILE_DIRS += sdk/library/config
+GOVEE_SDK_FILE_DIRS += sdk/library/i2c
+GOVEE_SDK_FILE_DIRS += sdk/library/fft
+GOVEE_SDK_FILE_DIRS += sdk/library/specific
+GOVEE_SDK_FILE_DIRS += sdk/library/auto_init
+GOVEE_SDK_FILE_DIRS += sdk/library/audio
+GOVEE_SDK_FILE_DIRS += sdk/library/hci_test
+GOVEE_SDK_FILE_DIRS += sdk/service/uart_manager
+GOVEE_SDK_FILE_DIRS += sdk/service/button_manager
+GOVEE_SDK_FILE_DIRS += sdk/service/ble_manager
+GOVEE_SDK_FILE_DIRS += sdk/service/audio_manager
+GOVEE_SDK_FILE_DIRS += sdk/runtime
