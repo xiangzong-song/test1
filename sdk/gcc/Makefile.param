@@ -1,4 +1,4 @@
-MODULES_NAME += Govee_Light_SDK
+MODULES_NAME += Govee_Light
 
 EASY_FLASH_ENABLE := 1
 

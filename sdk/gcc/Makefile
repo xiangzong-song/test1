@@ -1,10 +1,26 @@
 TEMPLATE_PATH := ./
 include $(TEMPLATE_PATH)/Makefile.param
 
+ifneq ($(platform), )
+    PLATFORM=$(platform)
+else
+    PLATFORM=FR8016
+endif
+
+ifeq ($(PLATFORM),FR8016)
+    PLATFORM_PATH := ESD_FR801xH-Platform
+    LIBRARY_TYPE := 801X
+endif
+
+ifeq ($(PLATFORM),FR5089)
+    PLATFORM_PATH := ESD_FR5089_Platform
+    LIBRARY_TYPE := 508X
+endif
+
 PROJECT_NAME     := Govee_SDK_Lib
-TARGETS          :=$(MODULES_NAME)
+TARGETS          :=$(MODULES_NAME)_$(LIBRARY_TYPE)
 OUTPUT_DIRECTORY := build
-SDK_ROOT         := ../../platform/ESD_FR801xH-Platform/Freq_SDK/sdk
+SDK_ROOT         := ../../platform/$(PLATFORM_PATH)/Freq_SDK/sdk
 GOVEE_SDK_SRC    := ../code/
 LINKER_SCRIPT    := ldscript.ld
 
