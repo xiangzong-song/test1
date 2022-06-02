@@ -9,6 +9,7 @@ int LightSdk_audio_sample_init(uint8_t rate, int gain_level);
 void LightSdk_audio_sample_deinit(void);
 int LightSdk_audio_sample_start(void);
 int LightSdk_audio_sample_stop(void);
-
+int LightSdk_audio_sample_ring_buffer_init(int buffer_size);
+int LightSdk_audio_sample_ring_buffer_deinit(void);
 
 #endif

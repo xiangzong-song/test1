@@ -4,3 +4,6 @@
 [submodule "platform/ESD_FR801xH-Platform"]
 	path = platform/ESD_FR801xH-Platform
 	url = git@github.com:wenlong-ihoment/ESD_FR801xH-Platform.git
+[submodule "cpputest"]
+	path = cpputest
+	url = https://github.com/cpputest/cpputest.git

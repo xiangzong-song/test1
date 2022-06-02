@@ -4,22 +4,28 @@
 #include "driver_codec.h"
 #include "software_fft.h"
 
-typedef struct
-{
-    uint8_t         beat_en:1;  //beat enable     
-    uint8_t         fft_en:1;   //fft enable 
-    uint8_t         style_en:1; //music style recognition enable 
-    window_type_e   window;     //fft window
-    uint8_t         beat_sens;  //beat sensitivity
-} audio_para_t;
-   
 typedef enum
 {
     FFT_BIT     = (1<<0),
     BEAT_BIT    = (1<<1),
     STYLE_BIT   = (1<<2)
-} update_bits_e;
+} info_bits_e;
 
+typedef enum 
+{
+    MIC = 0,
+    DSP
+} audio_src_e;
+
+typedef struct
+{
+    audio_src_e     audio_src;      //audio source choose
+    uint16_t        noise_value;    //audio noise value
+    info_bits_e     info_en_bits;   //audio info enable bit
+    window_type_e   window;         //fft window
+    uint8_t         beat_sens;      //beat sensitivity
+} audio_para_t;
+   
 typedef enum
 {
     BLUES = 1,
@@ -38,7 +44,7 @@ typedef enum
 
 typedef struct
 {
-    update_bits_e   update_bits;
+    info_bits_e     update_bits;
     int             *fft_data_address;  
     uint32_t        fft_data_int_len;      
     uint16_t        beat_value;     

@@ -10,6 +10,7 @@
 #include "ringbuffer.h"
 #include "runtime.h"
 #include "fft_fixed.h"
+#include "audio_sample.h"
 
 #define AVG_NUM 100
 #define RM_DC_FILTER_TIMES 63
@@ -39,12 +40,18 @@ static audio_init_t audio_init =
         .sample_size = 256,
         .gain_level = 100};
 
-static audio_para_t audio_para = {0};
+static audio_para_t audio_para = 
+{
+        .audio_src = MIC,
+        .info_en_bits = BEAT_BIT,
+        .window = WINDOW_HANNING,
+        .beat_sens = 100,
+        .noise_value = 10};
+
 static uint8_t g_audio_init_flag = 0;
 static struct audio_queue g_audio_queue;
 static int16_t audio_data_idx = 0;
 static int16_t audio_data_cnt = 0;
-// static int16_t audio_moving_avg = 0;
 static uint16_t *audio_data_tab = NULL;
 static int16_t audio_time_count = 0;
 static int16_t audio_silence_count = 0;
@@ -62,6 +69,119 @@ static int* audio_fft_data = NULL;
             g_audio_init_flag = 1;                                   \
         }                                                            \
     } while (0)
+
+
+/****************************************************************
+*  static function
+*****************************************************************/
+static int audio_hw_init(audio_src_e src)
+{
+    if (src == DSP)
+    {
+        /*
+        dsp hardware init.
+        */
+    }
+    else
+    {
+        if (audio_init.sample_rate != CODEC_SAMPLE_RATE_48000 &&
+            audio_init.sample_rate != CODEC_SAMPLE_RATE_44100 &&
+            audio_init.sample_rate != CODEC_SAMPLE_RATE_24000 &&
+            audio_init.sample_rate != CODEC_SAMPLE_RATE_16000 &&
+            audio_init.sample_rate != CODEC_SAMPLE_RATE_8000)
+        {
+            SDK_PRINT(LOG_ERROR, "Invalid sample_rate.\r\n");
+            return -1;
+        }
+
+        if (audio_init.sample_size < 256)
+        {
+            SDK_PRINT(LOG_WARNING, "sample_size should be over 256.\r\n");
+        }
+
+        LightSdk_audio_sample_init(audio_init.sample_rate, audio_init.gain_level);
+    }
+
+    return 0;
+}
+
+static void audio_hw_deinit(audio_src_e src)
+{
+    if (audio_para.audio_src == DSP)
+    {
+        /*
+        dsp hardware deinit.
+        */
+    }
+    else
+    {
+        LightSdk_audio_sample_deinit();
+    }
+}
+
+static void audio_hw_start(audio_src_e src)
+{
+    if (src == DSP)
+    {
+        /*
+        dsp hardware start code.
+        */
+    }
+    else
+    {
+        LightSdk_audio_sample_start();
+    }
+}
+
+static void audio_hw_stop(audio_src_e src)
+{
+    if (src == DSP)
+    {
+        /*
+        dsp hardware stop code.
+        */
+    }
+    else
+    {
+        LightSdk_audio_sample_stop();
+    }   
+}
+
+static int audio_sample_size_get(audio_src_e src)
+{
+    int size = 0;
+
+    if (src == DSP)
+    {
+        /*
+        dsp audio_sample_read.
+        */
+    }
+    else
+    {
+        size = LightSdk_audio_sample_size();
+    }
+
+    return size;
+}
+
+static int audio_sample_read(audio_src_e src, int16_t* buffer, uint32_t sample_size)
+{
+    int ret = 0;
+
+    if (src == DSP)
+    {
+        /*
+        dsp audio read code.
+        */
+    }
+    else
+    {
+        ret = LightSdk_audio_sample_read(buffer, sample_size);
+    }
+
+    return ret;
+}
 
 static int audio_remove_data_dc_offset(int16_t *sample_data, uint32_t sample_size)
 {
@@ -161,7 +281,12 @@ static uint16_t audio_get_volume_sensitivity(uint8_t sensitivity)
         sensitivity = 100;
     }
 
-    volume_sensitivity = 10 + (100 - sensitivity);
+    if (audio_para.noise_value < 10)
+    {
+        audio_para.noise_value = 10;
+    }
+
+    volume_sensitivity = audio_para.noise_value + (100 - sensitivity);
 
     return volume_sensitivity;
 }
@@ -190,7 +315,7 @@ static int audio_get_volume_th(int avg_array_sum, int avg_array_max, int time_co
     return th;
 }
 
-int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
+static int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
 {
     uint32_t sample_size = audio_init.sample_size;
     uint8_t sensitivity = para.beat_sens;
@@ -287,6 +412,25 @@ int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
     return beat_value;
 }
 
+
+static int audio_fft_value_get(int16_t *sample_data, int *data, audio_para_t para)
+{
+    int ret = 0;
+    ret = LightSdk_fft_do(sample_data, audio_fft_data, para.window);
+
+    uint32_t len = audio_init.sample_size / 2;
+    uint32_t div = (100 - para.beat_sens) / 5;
+    if (div == 0)
+        div = 1;
+
+    for (int i=0; i<len; i++)
+    {
+        audio_fft_data[i] = audio_fft_data[i] / div;
+    }
+
+    return ret;
+}
+
 static uint8_t audio_music_style_get(int16_t *sample_data, audio_para_t para)
 {
     uint8_t music_style = 0;
@@ -309,17 +453,17 @@ static void audio_process(void *args)
         return;
     }
 
-    if (LightSdk_audio_sample_size() >= sample_size)
+    if (audio_sample_size_get(audio_para.audio_src) >= sample_size)
     {
         memset(sample_data, 0, sizeof(sample_data));
 
-        LightSdk_audio_sample_read(sample_data, sample_size);
+        audio_sample_read(audio_para.audio_src, sample_data, sample_size);
         audio_remove_data_dc_offset(sample_data, sample_size);
 
         audio_info.update_bits = 0;
-        if (audio_para.fft_en)
+        if (audio_para.info_en_bits & FFT_BIT)
         {
-            if (LightSdk_fft_do(sample_data, audio_fft_data, audio_para.window) != 0)
+            if (audio_fft_value_get(sample_data, audio_fft_data, audio_para) != 0)
             {
                 SDK_PRINT(LOG_ERROR, "LightSdk_fft_do fail.\r\n");
                 audio_info.fft_data_address = NULL;
@@ -333,7 +477,7 @@ static void audio_process(void *args)
             }
         }
 
-        if (audio_para.beat_en)
+        if (audio_para.info_en_bits & BEAT_BIT)
         {
             int  beat_value = audio_beat_value_get(sample_data, audio_para);
             if (beat_value > 0)
@@ -343,7 +487,7 @@ static void audio_process(void *args)
             }
         }
 
-        if (audio_para.style_en)
+        if (audio_para.info_en_bits & STYLE_BIT)
         {
             uint8_t music_style = audio_music_style_get(sample_data, audio_para);
             if (music_style != audio_info.music_style)
@@ -366,24 +510,12 @@ static void audio_process(void *args)
     }
 }
 
+/****************************************************************
+*  public function
+*****************************************************************/
 int LightService_audio_manager_init(void)
 {
-    if (audio_init.sample_rate != CODEC_SAMPLE_RATE_48000 &&
-        audio_init.sample_rate != CODEC_SAMPLE_RATE_44100 &&
-        audio_init.sample_rate != CODEC_SAMPLE_RATE_24000 &&
-        audio_init.sample_rate != CODEC_SAMPLE_RATE_16000 &&
-        audio_init.sample_rate != CODEC_SAMPLE_RATE_8000)
-    {
-        SDK_PRINT(LOG_ERROR, "Invalid sample_rate.\r\n");
-        return -1;
-    }
-
-    if (audio_init.sample_size < 256)
-    {
-        SDK_PRINT(LOG_WARNING, "sample_size should be over 256.\r\n");
-    }
-
-    LightSdk_audio_sample_init(audio_init.sample_rate, audio_init.gain_level);
+    audio_hw_init(audio_para.audio_src);
 
     AUDIO_TASK_INIT_CHECK;
 
@@ -392,7 +524,7 @@ int LightService_audio_manager_init(void)
 
 void LightService_audio_manager_deinit(void)
 {
-    LightSdk_audio_sample_deinit();
+    audio_hw_deinit(audio_para.audio_src);
 }
 
 int LightService_audio_manager_register(audio_info_proc callback, void *args)
@@ -444,13 +576,14 @@ int LightService_audio_manager_start(audio_para_t para)
     {
         audio_start_flag = 1;
 
+        //buffer malloc
         if (audio_data_tab == NULL)
         {
             audio_data_tab = (int16_t *)HAL_malloc(AVG_NUM * sizeof(int16_t));
             memset(audio_data_tab, 0, sizeof(audio_data_tab));
         }
 
-        if (audio_para.fft_en)
+        if (audio_para.info_en_bits & FFT_BIT)
         {
             LightSdk_fft_init();
             if (audio_fft_data == NULL)
@@ -458,8 +591,10 @@ int LightService_audio_manager_start(audio_para_t para)
                 audio_fft_data = (int*)HAL_malloc(2*sample_size*sizeof(int));
             }
         }
+        LightSdk_audio_sample_ring_buffer_init(1024);
 
-        LightSdk_audio_sample_start();
+        //audio source hardware start
+        audio_hw_start(audio_para.audio_src);
     }
 
     return 0;
@@ -470,8 +605,12 @@ int LightService_audio_manager_stop(void)
     if (audio_start_flag)
     {
         audio_start_flag = 0;
-        LightSdk_audio_sample_stop();
 
+        //audio source hardware stop
+        audio_hw_stop(audio_para.audio_src);
+    
+        //buffer free
+        LightSdk_audio_sample_ring_buffer_deinit();
         if (audio_data_tab)
         {
             HAL_free(audio_data_tab);

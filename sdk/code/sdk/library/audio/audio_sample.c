@@ -126,7 +126,6 @@ int LightSdk_audio_sample_start(void)
     {
         NVIC_SetPriority(I2S_IRQn, I2S_IRQ_PRIO);
         NVIC_EnableIRQ(I2S_IRQn);
-        LightSdk_audio_sample_ring_buffer_init(1024);
         g_adc_flag = 1;
     }
 
@@ -138,7 +137,6 @@ int LightSdk_audio_sample_stop(void)
     if (g_adc_flag)
     {
         NVIC_DisableIRQ(I2S_IRQn);
-        LightSdk_audio_sample_ring_buffer_deinit();
         g_adc_flag = 0;
     }
 
