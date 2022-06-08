@@ -1,6 +1,10 @@
+#include <string.h>
 #include "log.h"
 #include "config.h"
 #include "device_time.h"
+
+#define LIGHT_SYSTEM_VERSION        "1.00.01"
+
 
 int LightSystem_init(log_level_e level)
 {
@@ -23,6 +27,8 @@ int LightSystem_init(log_level_e level)
             break;
         }
 
+        HAL_printf("SDK platform : %s, version : %s\r\n", PLATFORM_TYPE, LIGHT_SYSTEM_VERSION);
+
         return 0;
     }
     while (0);
@@ -30,4 +36,18 @@ int LightSystem_init(log_level_e level)
     SDK_PRINT(LOG_ERROR, "System init failed.\r\n");
 
     return -1;
+}
+
+int LightSystem_information_get(char* platform, char* version)
+{
+    if (NULL == platform || NULL == version)
+    {
+        SDK_PRINT(LOG_ERROR, "Parameter point is null.\r\n");
+        return -1;
+    }
+
+    strcpy(platform, PLATFORM_TYPE);
+    strcpy(version, LIGHT_SYSTEM_VERSION);
+
+    return 0;
 }

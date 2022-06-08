@@ -11,5 +11,6 @@ typedef enum _sdk_log_level_e
 } log_level_e;
 
 int LightSystem_init(log_level_e level);
+int LightSystem_information_get(char* platform, char* version);
 
 #endif

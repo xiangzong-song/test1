@@ -60,6 +60,7 @@ INC_FOLDERS +=$(GOVEE_SDK_FOLDERS)
 # Optimization flags
 #OPT = -Os -g -Wall
 OPT = -Os -g -Werror
+OPT += -DPLATFORM_TYPE=\"$(LIBRARY_TYPE)\"
 
 # C flags common to all targets
 CFLAGS += $(OPT)
