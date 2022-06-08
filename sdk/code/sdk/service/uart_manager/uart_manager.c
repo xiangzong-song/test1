@@ -446,7 +446,7 @@ int LightService_uart_manager_register(uart_msg callback, void* args)
 
     UART_TASK_INIT_CHECK;
 
-    if (NULL == (element = os_malloc(sizeof(struct uart_entry))))
+    if (NULL == (element = HAL_malloc(sizeof(struct uart_entry))))
     {
         SDK_PRINT(LOG_ERROR, "Malloc uart entry failed.\r\n");
         return -1;

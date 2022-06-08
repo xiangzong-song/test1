@@ -829,7 +829,7 @@ int LightService_ble_manager_register(ble_msg msg, ble_event event, void* args)
     struct ble_entry* element = NULL;
     BLE_TASK_INIT_CHECK;
 
-    if (NULL == (element = os_malloc(sizeof(struct ble_entry))))
+    if (NULL == (element = HAL_malloc(sizeof(struct ble_entry))))
     {
         SDK_PRINT(LOG_ERROR, "Malloc ble entry failed.\r\n");
         return -1;

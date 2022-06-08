@@ -29,4 +29,6 @@ GOVEE_SDK_FILE_DIRS += sdk/service/uart_manager
 GOVEE_SDK_FILE_DIRS += sdk/service/button_manager
 GOVEE_SDK_FILE_DIRS += sdk/service/ble_manager
 GOVEE_SDK_FILE_DIRS += sdk/service/audio_manager
+GOVEE_SDK_FILE_DIRS += sdk/service/watchdog_manager
 GOVEE_SDK_FILE_DIRS += sdk/runtime
+GOVEE_SDK_FILE_DIRS += sdk/system

@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <string.h>
-#include "os_mem.h"
+#include "hal_os.h"
 #include "driver_iomux.h"
 #include "driver_ssp.h"
 #include "driver_gpio.h"
 #include "driver_pwm.h"
 #include "sys_utils.h"
 #include "device_time.h"
+#include "runtime.h"
 #include "log.h"
 #include "led.h"
 
@@ -498,7 +499,7 @@ int LightSdk_led_init(led_param_t* param)
     }
     else
     {
-        g_iic_data = (uint8_t*)os_malloc(3*gt_led_params.ic_count + 5);
+        g_iic_data = (uint8_t*)HAL_malloc(3*gt_led_params.ic_count + 5);
         if (g_iic_data == NULL)
         {
             SDK_PRINT(LOG_ERROR, "malloc iic send buffer failed.\r\n");
@@ -523,13 +524,13 @@ int LightSdk_led_init(led_param_t* param)
         }
     }
 
-    gp_gradual_step = (uint8_t*)os_malloc(3*gt_led_params.ic_count + 2);
+    gp_gradual_step = (uint8_t*)HAL_malloc(3*gt_led_params.ic_count + 2);
     memset(gp_gradual_step, 0, 3*gt_led_params.ic_count + 2);
-    gt_color_dst.rgb = (uint8_t*)os_malloc(3*gt_led_params.ic_count);
+    gt_color_dst.rgb = (uint8_t*)HAL_malloc(3*gt_led_params.ic_count);
     memset(gt_color_dst.rgb, 0, 3*gt_led_params.ic_count);
-    gt_color_now.rgb = (uint8_t*)os_malloc(3*gt_led_params.ic_count);
+    gt_color_now.rgb = (uint8_t*)HAL_malloc(3*gt_led_params.ic_count);
     memset(gt_color_now.rgb, 0, 3*gt_led_params.ic_count);
-    gt_color_base.rgb = (uint8_t*)os_malloc(3*gt_led_params.ic_count);
+    gt_color_base.rgb = (uint8_t*)HAL_malloc(3*gt_led_params.ic_count);
     memset(gt_color_base.rgb, 0, 3*gt_led_params.ic_count);
     if (gp_gradual_step == NULL || gt_color_dst.rgb == NULL || gt_color_now.rgb == NULL || gt_color_base.rgb == NULL)
     {
@@ -546,31 +547,31 @@ void LightSdk_led_deinit(void)
 {
     if (g_iic_data)
     {
-        os_free(g_iic_data);
+        HAL_free(g_iic_data);
         g_iic_data = NULL;
     }
 
     if (gp_gradual_step)
     {
-        os_free(gp_gradual_step);
+        HAL_free(gp_gradual_step);
         gp_gradual_step = NULL;
     }
 
     if (gt_color_dst.rgb)
     {
-        os_free(gt_color_dst.rgb);
+        HAL_free(gt_color_dst.rgb);
         gt_color_dst.rgb = NULL;
     }
 
     if (gt_color_now.rgb)
     {
-        os_free(gt_color_now.rgb);
+        HAL_free(gt_color_now.rgb);
         gt_color_now.rgb = NULL;
     }
 
     if (gt_color_base.rgb)
     {
-        os_free(gt_color_base.rgb);
+        HAL_free(gt_color_base.rgb);
         gt_color_base.rgb = NULL;
     }
 }

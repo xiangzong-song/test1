@@ -216,7 +216,7 @@ int LightService_button_manager_register(button_event event, button_reset reset,
 
     BUTTON_TASK_INIT_CHECK;
 
-    if (NULL == (element = os_malloc(sizeof(struct button_entry))))
+    if (NULL == (element = HAL_malloc(sizeof(struct button_entry))))
     {
         SDK_PRINT(LOG_ERROR, "Malloc button entry failed.\r\n");
         return -1;

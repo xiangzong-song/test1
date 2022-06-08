@@ -1,15 +1,10 @@
-#include "os_mem.h"
 #include "os_task.h"
 #include "sys_queue.h"
+#include "hal_os.h"
 #include "log.h"
-#include "device_time.h"
 #include "runtime.h"
-#include "config.h"
-#include "watchdog.h"
 #include "device_time.h"
-#include "audio_manager.h"
 
-#define SDK_WATCHDOG_TIMEOUT            10 //second
 
 struct loop_task_entry
 {
@@ -36,13 +31,11 @@ TAILQ_HEAD(event_task_queue, event_task_entry);
 static struct loop_task_queue g_loop_task;
 static struct event_task_queue g_event_task;
 static uint16_t g_runtime_task = 0xff;
-static uint8_t g_watchdog_enable = 0;
 
 
 static void runtime_loop_task(void)
 {
     struct loop_task_entry* var = NULL;
-    static uint32_t wdt_tick = 0;
 
     TAILQ_FOREACH(var, &g_loop_task, entry)
     {
@@ -50,11 +43,6 @@ static void runtime_loop_task(void)
         {
             (*var->task)(var->args);
         }
-    }
-
-    if (g_watchdog_enable && LightSdk_time_is_exceed(&wdt_tick, 3, 1))
-    {
-        LightSdk_watchdog_feed();
     }
 }
 
@@ -74,32 +62,20 @@ static int runtime_event_task(os_event_t *event)
     return EVT_CONSUMED;
 }
 
-void LightRuntime_sdk_init(uint8_t log_level, uint8_t wdt_enable)
+void LightRuntime_init(void)
 {
     TAILQ_INIT(&g_loop_task);
     TAILQ_INIT(&g_event_task);
 
-    LightSdk_log_init(log_level);
-    LightSdk_config_init();
-    LightSdk_time_init(0, NULL, NULL);
-
     g_runtime_task = os_task_create(runtime_event_task);
     os_user_loop_event_set(runtime_loop_task);
-
-    if (wdt_enable)
-    {
-        g_watchdog_enable = 1;
-        LightSdk_watchdog_init(SDK_WATCHDOG_TIMEOUT);
-    }
-
-    LightService_audio_manager_init();
 }
 
 int LightRuntime_loop_task_register(loop_task task, uint32_t interval, void* args)
 {
     struct loop_task_entry* element = NULL;
 
-    if (NULL == (element = os_malloc(sizeof(struct loop_task_entry))))
+    if (NULL == (element = HAL_malloc(sizeof(struct loop_task_entry))))
     {
         SDK_PRINT(LOG_ERROR, "Malloc loop task entry failed.\r\n");
         return -1;
@@ -139,7 +115,7 @@ int LightRuntime_event_task_register(uint16_t* event_id, event_task task, void* 
         return -1;
     }
 
-    if (NULL == (element = os_malloc(sizeof(struct event_task_entry))))
+    if (NULL == (element = HAL_malloc(sizeof(struct event_task_entry))))
     {
         SDK_PRINT(LOG_ERROR, "Malloc event task entry failed.\r\n");
         return -1;

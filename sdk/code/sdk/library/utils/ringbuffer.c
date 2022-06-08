@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "os_mem.h"
+#include "hal_os.h"
 #include "ringbuffer.h"
 
 
@@ -29,22 +29,22 @@ LR_handler Lite_ring_buffer_init(int length)
     LITE_RBUFFER_T* lr_buffer = NULL;
     uint8_t* buffer = NULL;
 
-    lr_buffer = (LITE_RBUFFER_T*)os_malloc(sizeof(LITE_RBUFFER_T));
+    lr_buffer = (LITE_RBUFFER_T*)HAL_malloc(sizeof(LITE_RBUFFER_T));
     if (lr_buffer == NULL)
     {
 #if LITE_RBUFFER_DEBUG_ENABLE
-        printf("[HAL] <%s, %d> No memory.\r\n", __FILE__, __LINE__);
+        HAL_printf("[HAL] <%s, %d> No memory.\r\n", __FILE__, __LINE__);
 #endif
         return NULL;
     }
 
-    buffer = (unsigned char*)os_malloc(length);
+    buffer = (unsigned char*)HAL_malloc(length);
     if (buffer == NULL)
     {
-        os_free(lr_buffer);
+        HAL_free(lr_buffer);
 
 #if LITE_RBUFFER_DEBUG_ENABLE
-        printf("[HAL] <%s, %d> malloc ring buffer failed.\r\n", __FILE__, __LINE__);
+        HAL_printf("[HAL] <%s, %d> malloc ring buffer failed.\r\n", __FILE__, __LINE__);
 #endif
         return NULL;
     }
@@ -64,20 +64,20 @@ void Lite_ring_buffer_deinit(LR_handler handler)
     if (handler == NULL)
     {
 #if LITE_RBUFFER_DEBUG_ENABLE
-        printf("[HAL] <%s, %d> Invalid param.\r\n", __FILE__, __LINE__);
+        HAL_printf("[HAL] <%s, %d> Invalid param.\r\n", __FILE__, __LINE__);
 #endif
         return;
     }
 
     if (handler->addr)
     {
-        os_free(handler->addr);
+        HAL_free(handler->addr);
         handler->addr = NULL;
     }
 
     if (handler)
     {
-        os_free(handler);
+        HAL_free(handler);
         handler = NULL;
     }
 }
@@ -89,7 +89,7 @@ __attribute__((section("ram_code"))) int Lite_ring_buffer_write_data(LR_handler 
     if (handler->total - Lite_ring_buffer_size_get(handler) < size)
     {
 #if LITE_RBUFFER_DEBUG_ENABLE
-        printf("[HAL] <%s, %d> No enough buffer size.\r\n", __FILE__, __LINE__);
+        HAL_printf("[HAL] <%s, %d> No enough buffer size.\r\n", __FILE__, __LINE__);
 #endif
         return -1;
     }
@@ -119,7 +119,7 @@ __attribute__((section("ram_code"))) int Lite_ring_buffer_read_data(LR_handler h
     if (Lite_ring_buffer_size_get(handler) < size)
     {
 #if LITE_RBUFFER_DEBUG_ENABLE
-        printf("[HAL] <%s, %d> No enough data size.\r\n", __FILE__, __LINE__);
+        HAL_printf("[HAL] <%s, %d> No enough data size.\r\n", __FILE__, __LINE__);
 #endif
         return -1;
     }
@@ -150,10 +150,14 @@ __attribute__((section("ram_code"))) int Lite_ring_buffer_left_get(LR_handler ha
 
 __attribute__((section("ram_code"))) int Lite_ring_buffer_size_get(LR_handler handler)
 {
-	if( handler->write >= handler->read )
-		handler->size = handler->write - handler->read ;
-	else
-		handler->size = (handler->write + handler->total - handler->read);
+    if( handler->write >= handler->read )
+    {
+        handler->size = handler->write - handler->read;
+    }
+    else
+    {
+        handler->size = (handler->write + handler->total - handler->read);
+    }
 
     return (int)handler->size;
 }
@@ -166,10 +170,10 @@ void Lite_ring_buffer_print(LR_handler handler, int b_newline)
     {
         if (b_newline && (i % 16 == 0) && (i != 0))
         {
-            printf("\r\n");
+            HAL_printf("\r\n");
         }
-        printf("%02x ", handler->addr[i]);
+        HAL_printf("%02x ", handler->addr[i]);
     }
 
-    printf("\r\n");
+    HAL_printf("\r\n");
 }
