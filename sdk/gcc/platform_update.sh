@@ -23,7 +23,12 @@ else
         cd build/include
         cp $PLATFORM_HEADER_FILES ../../${PLATFORM_8016_INC}
     elif [ $1 = "FR5089" ]; then
-        echo "current not support"
+        ./sdk_build.sh FR5089
+        rm ${PLATFORM_5089_INC}/*.h
+        rm ${PLATFORM_5089_LIB}/*.a
+        cp build/*.a $PLATFORM_5089_LIB
+        cd build/include
+        cp $PLATFORM_HEADER_FILES ../../${PLATFORM_5089_INC}
     else
         echo "Error : invalid platform '$1'"
         exit
