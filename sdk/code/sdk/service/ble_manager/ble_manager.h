@@ -25,12 +25,6 @@ typedef enum
 
 typedef enum
 {
-    CHECK_SUM_XOR = 0,
-    CHECK_SUM_PLUS
-} ble_checksum_e;
-
-typedef enum
-{
     MSG_BLE = 0,
     MSG_UART
 } msg_source_e;
@@ -114,8 +108,6 @@ int LightService_ble_manager_data_pack(ble_pack_t input, ble_msg_t* output);
 int LightService_ble_manager_data_save(ble_iot_t iot_data);
 int LightService_ble_manager_data_response(msg_header_t* pt_header, ble_pack_t data);
 void LightService_ble_manager_print_set(uint8_t type, uint8_t flag);
-uint8_t LightService_ble_manager_check_sum(uint8_t* p_data, uint32_t length, ble_checksum_e type);
-
 
 #endif
 

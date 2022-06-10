@@ -76,6 +76,12 @@ typedef enum
     DATA_SEND,
 } ble_data_e;
 
+typedef enum
+{
+    CHECK_SUM_XOR = 0,
+    CHECK_SUM_PLUS
+} ble_checksum_e;
+
 struct ble_entry
 {
     ble_event event;
@@ -914,18 +920,28 @@ ble_state_e LightService_ble_manager_state_get(void)
 int LightService_ble_manager_data_write(uint8_t* buffer, uint32_t length)
 {
     gatt_ntf_t ntf_att;
+    uint8_t data[128] = {0};
+    ble_checksum_e checksum_type = CHECK_SUM_XOR;
 
-    if (!buffer || length == 0)
+    if (!buffer || length == 0 || length >127)
     {
         return -1;
     }
 
+    if (buffer[0] == MSG_GROUP_CONTROL || (buffer[0] & 0xf0) == MSG_GROUP_CONTROL_V2)
+    {
+        checksum_type = CHECK_SUM_PLUS;
+    }
+    memcpy(data, buffer, length);
+    data[length] = ble_check_sum(data, length, checksum_type);
+
     ntf_att.att_idx = GOVEE_GATT_IDX_CHAR1_VALUE;
     ntf_att.conidx = g_link_conidx;
     ntf_att.svc_id = g_gatt_service_id;
-    ntf_att.data_len = length;
-    ntf_att.p_data = buffer;
+    ntf_att.data_len = length + 1;
+    ntf_att.p_data = data;
     gatt_notification(ntf_att);
+
     return 0;
 }
 
@@ -1032,9 +1048,3 @@ void LightService_ble_manager_print_set(uint8_t type, uint8_t flag)
     g_debug_print_type = type;
     g_debug_print_flag = flag;
 }
-
-uint8_t LightService_ble_manager_check_sum(uint8_t* p_data, uint32_t length, ble_checksum_e type)
-{
-    return ble_check_sum(p_data, length, type);
-}
-
