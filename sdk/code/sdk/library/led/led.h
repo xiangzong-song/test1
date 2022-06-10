@@ -54,6 +54,13 @@ typedef enum
     LED_WITHOUT_QUEUE = 0xff
 } led_gradual_e;
 
+typedef enum
+{
+    CURRENT_LIMIT_NONE = 0,
+    CURRENT_LIMIT_SINGLE,
+    CURRENT_LIMIT_WHOLE
+} led_limit_e;
+
 typedef struct
 {
     uint8_t enable;
@@ -70,6 +77,7 @@ typedef struct
     uint8_t with_ww;
     uint8_t lumi_min;
     uint8_t refresh_base;
+    led_limit_e limit_type;
     uint32_t current_limit;
     led_pwm_t pwm_cw;
     led_pwm_t pwm_ww;

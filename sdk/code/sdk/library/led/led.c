@@ -186,6 +186,7 @@ static void led_data_write(led_data_t* pt_data)
 
 static void led_data_sort(led_data_t* pt_dst, uint8_t* data, uint32_t size, uint8_t bright)
 {
+    uint32_t single_sum = 0;
     uint32_t color_sum = 0;
     int i = 0;
 
@@ -227,10 +228,24 @@ static void led_data_sort(led_data_t* pt_dst, uint8_t* data, uint32_t size, uint
             pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+1] * bright / LED_MAX_BRIGHTNESS);
             pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3] * bright / LED_MAX_BRIGHTNESS);
         }
-        color_sum += pt_dst->rgb[3 * i] + pt_dst->rgb[3 * i + 1] + pt_dst->rgb[3 * i + 2];
+
+        single_sum = pt_dst->rgb[3 * i] + pt_dst->rgb[3 * i + 1] + pt_dst->rgb[3 * i + 2];
+        if (gt_led_params.limit_type == CURRENT_LIMIT_SINGLE)
+        {
+            if (single_sum > gt_led_params.current_limit)
+            {
+                pt_dst->rgb[3 * i] = pt_dst->rgb[3 * i] * gt_led_params.current_limit / single_sum;
+                pt_dst->rgb[3 * i + 1] = pt_dst->rgb[3 * i + 1] * gt_led_params.current_limit / single_sum;
+                pt_dst->rgb[3 * i + 2] = pt_dst->rgb[3 * i + 2] * gt_led_params.current_limit / single_sum;
+            }
+        }
+        else if (gt_led_params.limit_type == CURRENT_LIMIT_WHOLE)
+        {
+            color_sum += single_sum;
+        }
     }
 
-    if (gt_led_params.current_limit)
+    if (gt_led_params.limit_type == CURRENT_LIMIT_WHOLE)
     {
         if (color_sum > gt_led_params.current_limit)
         {
