@@ -239,6 +239,7 @@ void LightService_button_manager_unregister(button_event event, button_reset res
         if (var->event == event && var->reset == reset)
         {
             TAILQ_REMOVE(&g_button_queue, var, entry);
+            HAL_free(var);
             break;
         }
     }

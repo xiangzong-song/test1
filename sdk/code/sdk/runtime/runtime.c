@@ -99,6 +99,7 @@ void LightRuntime_loop_task_unregister(loop_task task)
         if (var->task == task)
         {
             TAILQ_REMOVE(&g_loop_task, var, entry);
+            HAL_free(var);
             break;
         }
     }

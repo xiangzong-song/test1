@@ -850,6 +850,7 @@ void LightService_ble_manager_unregister(ble_msg msg, ble_event event)
         if (var->event == event && var->message == msg)
         {
             TAILQ_REMOVE(&g_ble_queue, var, entry);
+            HAL_free(var);
             break;
         }
     }

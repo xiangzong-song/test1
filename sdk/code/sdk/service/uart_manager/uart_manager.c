@@ -468,6 +468,7 @@ void LightService_uart_manager_unregister(uart_msg callback)
         if (var->callback == callback)
         {
             TAILQ_REMOVE(&g_uart_queue, var, entry);
+            HAL_free(var);
             break;
         }
     }

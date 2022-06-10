@@ -40,7 +40,7 @@ static audio_init_t audio_init =
         .sample_size = 256,
         .gain_level = 100};
 
-static audio_para_t audio_para = 
+static audio_para_t audio_para =
 {
         .audio_src = MIC,
         .info_en_bits = BEAT_BIT,
@@ -144,7 +144,7 @@ static void audio_hw_stop(audio_src_e src)
     else
     {
         LightSdk_audio_sample_stop();
-    }   
+    }
 }
 
 static int audio_sample_size_get(audio_src_e src)
@@ -326,13 +326,13 @@ static int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
     uint16_t data_recent[4] = {0};
     uint16_t idx = 0;
     int th = 0;
-    
+
     if (sample_data == NULL)
     {
         SDK_PRINT(LOG_ERROR, "sample_data is null.\r\n");
         return -1;
     }
-    
+
     if (audio_data_tab == NULL)
     {
         uint32_t len = AVG_NUM * sizeof(int16_t);
@@ -555,6 +555,7 @@ void LightService_audio_manager_unregister(audio_info_proc callback)
         if (var->callback == callback)
         {
             TAILQ_REMOVE(&g_audio_queue, var, entry);
+            HAL_free(var);
             break;
         }
     }
@@ -608,7 +609,7 @@ int LightService_audio_manager_stop(void)
 
         //audio source hardware stop
         audio_hw_stop(audio_para.audio_src);
-    
+
         //buffer free
         LightSdk_audio_sample_ring_buffer_deinit();
         if (audio_data_tab)
