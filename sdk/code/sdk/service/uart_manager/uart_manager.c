@@ -284,9 +284,7 @@ static uint8_t uart_check_sum(uart_header_t* header, uint8_t* payload, int lengt
 
 static int uart_check_header(uart_header_t* pt_header)
 {
-    if (pt_header->start == UART_MSG_START_CODE && pt_header->version && pt_header->size <= UART_MSG_MAX_SIZE
-        && ((pt_header->command & 0xf0) == 0x60 || (pt_header->command & 0xf0) == 0x80 ||
-        (pt_header->command & 0xf0) == 0xc0 || (pt_header->command & 0xf0) == 0xa0 ))
+    if (pt_header->start == UART_MSG_START_CODE && pt_header->version && pt_header->size <= UART_MSG_MAX_SIZE)
     {
         return 0;
     }
