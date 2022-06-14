@@ -470,7 +470,7 @@ static void audio_process(void *args)
             }
             else
             {
-                percent = audio_para.beat_sens * (100 - 20) / 100 + 20;
+                percent = audio_para.beat_sens * (100 - 90) / 100 + 90;
                 for (int i = 0; i < sample_size / 2; i++)
                 {
                     audio_fft_data[i] = audio_fft_data[i + 1];
