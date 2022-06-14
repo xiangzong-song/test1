@@ -41,7 +41,7 @@ static audio_init_t audio_init =
         .gain_level = 100};
 
 static audio_para_t audio_para =
-{
+    {
         .audio_src = MIC,
         .info_en_bits = BEAT_BIT,
         .window = WINDOW_HANNING,
@@ -57,7 +57,7 @@ static int16_t audio_time_count = 0;
 static int16_t audio_silence_count = 0;
 static uint8_t audio_start_flag = 0;
 static audio_info_t audio_info = {0};
-static int* audio_fft_data = NULL;
+static int *audio_fft_data = NULL;
 
 #define AUDIO_TASK_INIT_CHECK                                        \
     do                                                               \
@@ -70,10 +70,9 @@ static int* audio_fft_data = NULL;
         }                                                            \
     } while (0)
 
-
 /****************************************************************
-*  static function
-*****************************************************************/
+ *  static function
+ *****************************************************************/
 static int audio_hw_init(audio_src_e src)
 {
     if (src == DSP)
@@ -165,7 +164,7 @@ static int audio_sample_size_get(audio_src_e src)
     return size;
 }
 
-static int audio_sample_read(audio_src_e src, int16_t* buffer, uint32_t sample_size)
+static int audio_sample_read(audio_src_e src, int16_t *buffer, uint32_t sample_size)
 {
     int ret = 0;
 
@@ -341,7 +340,7 @@ static int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
     }
 
     // get avg.
-    uint32_t sum=0;
+    uint32_t sum = 0;
     for (uint32_t i = 0; i < sample_size; i++)
     {
         sum += sample_data[i] > 0 ? sample_data[i] : -sample_data[i];
@@ -354,7 +353,7 @@ static int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
     audio_data_cnt += (audio_data_cnt < AVG_NUM) ? 1 : 0;
 
     // get data_tab_avg and data_tab_max.
-    sum=0;
+    sum = 0;
     for (int16_t i = 0; i < audio_data_cnt; i++)
     {
         sum += audio_data_tab[i];
@@ -412,7 +411,6 @@ static int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
     return beat_value;
 }
 
-
 static int audio_fft_value_get(int16_t *sample_data, int *data, audio_para_t para)
 {
     int ret = 0;
@@ -423,7 +421,7 @@ static int audio_fft_value_get(int16_t *sample_data, int *data, audio_para_t par
     if (div == 0)
         div = 1;
 
-    for (int i=0; i<len; i++)
+    for (int i = 0; i < len; i++)
     {
         audio_fft_data[i] = audio_fft_data[i] / div;
     }
@@ -447,6 +445,7 @@ static void audio_process(void *args)
     struct audio_entry *var = NULL;
     uint32_t sample_size = audio_init.sample_size;
     int16_t sample_data[sample_size];
+    uint8_t percent = 0;
 
     if (audio_start_flag == 0)
     {
@@ -471,6 +470,17 @@ static void audio_process(void *args)
             }
             else
             {
+                percent = audio_para.beat_sens * (100 - 20) / 100 + 20;
+                for (int i = 0; i < sample_size / 2; i++)
+                {
+                    audio_fft_data[i] = audio_fft_data[i + 1];
+                    if (audio_fft_data[i] > 1000)
+                    {
+                        audio_fft_data[i] = 0;
+                    }
+                    audio_fft_data[i] = percent * audio_fft_data[i] / 100;
+                }
+
                 audio_info.fft_data_address = audio_fft_data;
                 audio_info.fft_data_int_len = sample_size / 2;
                 audio_info.update_bits |= FFT_BIT;
@@ -479,7 +489,7 @@ static void audio_process(void *args)
 
         if (audio_para.info_en_bits & BEAT_BIT)
         {
-            int  beat_value = audio_beat_value_get(sample_data, audio_para);
+            int beat_value = audio_beat_value_get(sample_data, audio_para);
             if (beat_value > 0)
             {
                 audio_info.beat_value = (uint16_t)beat_value;
@@ -511,8 +521,8 @@ static void audio_process(void *args)
 }
 
 /****************************************************************
-*  public function
-*****************************************************************/
+ *  public function
+ *****************************************************************/
 int LightService_audio_manager_init(void)
 {
     audio_hw_init(audio_para.audio_src);
@@ -577,7 +587,7 @@ int LightService_audio_manager_start(audio_para_t para)
     {
         audio_start_flag = 1;
 
-        //buffer malloc
+        // buffer malloc
         if (audio_data_tab == NULL)
         {
             audio_data_tab = (int16_t *)HAL_malloc(AVG_NUM * sizeof(int16_t));
@@ -589,12 +599,12 @@ int LightService_audio_manager_start(audio_para_t para)
             LightSdk_fft_init();
             if (audio_fft_data == NULL)
             {
-                audio_fft_data = (int*)HAL_malloc(2*sample_size*sizeof(int));
+                audio_fft_data = (int *)HAL_malloc(2 * sample_size * sizeof(int));
             }
         }
         LightSdk_audio_sample_ring_buffer_init(1024);
 
-        //audio source hardware start
+        // audio source hardware start
         audio_hw_start(audio_para.audio_src);
     }
 
@@ -607,10 +617,10 @@ int LightService_audio_manager_stop(void)
     {
         audio_start_flag = 0;
 
-        //audio source hardware stop
+        // audio source hardware stop
         audio_hw_stop(audio_para.audio_src);
 
-        //buffer free
+        // buffer free
         LightSdk_audio_sample_ring_buffer_deinit();
         if (audio_data_tab)
         {
