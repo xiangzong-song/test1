@@ -408,6 +408,12 @@ static int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
         audio_silence_count++;
     }
 
+    // HAL_printf("y%dy",avg);
+    // HAL_printf("r%dr",beat_value);
+    // HAL_printf("o%do",volume_sensitivity);
+    // HAL_printf("u%du",th);
+    // HAL_printf("p%dp",data_tab_avg);
+    
     return beat_value;
 }
 
@@ -415,17 +421,6 @@ static int audio_fft_value_get(int16_t *sample_data, int *data, audio_para_t par
 {
     int ret = 0;
     ret = LightSdk_fft_do(sample_data, audio_fft_data, para.window);
-
-    uint32_t len = audio_init.sample_size / 2;
-    uint32_t div = (100 - para.beat_sens) / 5;
-    if (div == 0)
-        div = 1;
-
-    for (int i = 0; i < len; i++)
-    {
-        audio_fft_data[i] = audio_fft_data[i] / div;
-    }
-
     return ret;
 }
 
@@ -473,7 +468,6 @@ static void audio_process(void *args)
                 percent = audio_para.beat_sens * (100 - 90) / 100 + 90;
                 for (int i = 0; i < sample_size / 2; i++)
                 {
-                    audio_fft_data[i] = audio_fft_data[i + 1];
                     if (audio_fft_data[i] > 1000)
                     {
                         audio_fft_data[i] = 0;
@@ -585,7 +579,12 @@ int LightService_audio_manager_start(audio_para_t para)
 
     if (!audio_start_flag)
     {
+        //initialization of variable
         audio_start_flag = 1;
+        audio_data_idx = 0;
+        audio_data_cnt = 0;
+        audio_time_count = 0;
+        audio_silence_count = 0;
 
         // buffer malloc
         if (audio_data_tab == NULL)
