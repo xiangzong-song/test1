@@ -39,21 +39,12 @@ typedef struct
     uint8_t count;
 } button_data_t;
 
-typedef struct
-{
-    uint8_t base_key;
-    uint8_t trigger_key;
-    uint8_t count;
-} button_reset_t;
-
 typedef void (*button_event)(button_data_t event, void* args);
-typedef void (*button_reset)(void* args);
 
 
 int LightService_button_manager_init(button_config_t* buttons, int count);
-int LightService_button_manager_reset_config(button_reset_t config);
-int LightService_button_manager_register(button_event event, button_reset reset, void* args);
-void LightService_button_manager_unregister(button_event event, button_reset reset);
+int LightService_button_manager_register(button_event event, void* args);
+void LightService_button_manager_unregister(button_event event);
 void LightService_button_manager_deinit(void);
 
 
