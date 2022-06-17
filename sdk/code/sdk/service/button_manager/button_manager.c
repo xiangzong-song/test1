@@ -24,7 +24,6 @@
 struct button_entry
 {
     button_event event;
-    button_reset reset;
     void* args;
     TAILQ_ENTRY(button_entry) entry;
 };
@@ -38,10 +37,6 @@ static uint8_t g_button_init_flag = 0;
 static button_config_t gt_button_table[BUTTON_COUNT_MAX];
 static uint16_t g_button_task = 0xff;
 static uint8_t g_button_count = 0;
-
-static uint32_t g_button_reset_value = 0;
-static uint32_t g_button_reset_trigger = 0;
-static uint8_t g_button_reset_count = 0;
 
 
 static const char *g_button_type_str[] =
@@ -65,30 +60,6 @@ static const char *g_button_type_str[] =
     "BUTTON_COMB_LONG_LONG_RELEASED",
 };
 
-
-static int button_reset_check(struct button_msg_t *button_msg)
-{
-    static uint8_t factory_cnt = 0;
-    int result = 0;
-
-    if (button_msg->button_type == BUTTON_COMB_SHORT_PRESSED && button_msg->button_index == g_button_reset_value)
-    {
-        SDK_PRINT(LOG_DEBUG, "factory reset pre trigger count : %d\r\n", factory_cnt + 1);
-        if (++factory_cnt >= g_button_reset_count)
-        {
-            result = 1;
-            factory_cnt = 0;
-        }
-    }
-    else if ( button_msg->button_type == BUTTON_RELEASED || button_msg->button_type == BUTTON_SHORT_PRESSED || button_msg->button_type == BUTTON_LONG_RELEASED
-            || button_msg->button_type == BUTTON_COMB_RELEASED || button_msg->button_type == BUTTON_COMB_LONG_LONG_RELEASED
-            || button_msg->button_type == BUTTON_COMB_LONG_LONG_RELEASED) // || (button_msg->button_type == BUTTON_PRESSED && button_msg->button_index != g_button_reset_trigger))
-    {
-        factory_cnt = 0;
-    }
-
-    return result;
-}
 
 static int button_task_process(os_event_t *param)
 {
@@ -115,17 +86,6 @@ static int button_task_process(os_event_t *param)
             button_id = gt_button_table[i].button_id;
             button_type = button_msg->button_type;
             break;
-        }
-    }
-
-    if (g_button_reset_value && button_reset_check(button_msg))
-    {
-        TAILQ_FOREACH(var, &g_button_queue, entry)
-        {
-            if (var->reset)
-            {
-                (*var->reset)(var->args);
-            }
         }
     }
 
@@ -181,36 +141,7 @@ int LightService_button_manager_init(button_config_t* buttons, int count)
     return 0;
 }
 
-int LightService_button_manager_reset_config(button_reset_t config)
-{
-    uint32_t reset_val = 0;
-    uint32_t trigger_val = 0;
-    int i = 0;
-
-    for (i = 0; i < g_button_count; i++)
-    {
-        if (gt_button_table[i].button_id == config.base_key || gt_button_table[i].button_id == config.trigger_key)
-        {
-            reset_val |= (GPIO2PORT(gt_button_table[i].port, gt_button_table[i].bits));
-
-            if (gt_button_table[i].button_id == config.trigger_key)
-            {
-                trigger_val = GPIO2PORT(gt_button_table[i].port, gt_button_table[i].bits);
-            }
-        }
-    }
-
-    g_button_reset_value = reset_val;
-    g_button_reset_trigger = trigger_val;
-    g_button_reset_count = config.count;
-
-    SDK_PRINT(LOG_DEBUG, "reset_value : 0x%08x, trigger_value :0x%08x, count : %d, callback : 0x%08x\r\n",
-        g_button_reset_value, g_button_reset_trigger, g_button_reset_count);
-
-    return 0;
-}
-
-int LightService_button_manager_register(button_event event, button_reset reset, void* args)
+int LightService_button_manager_register(button_event event, void* args)
 {
     struct button_entry* element = NULL;
 
@@ -223,20 +154,19 @@ int LightService_button_manager_register(button_event event, button_reset reset,
     }
 
     element->event = event;
-    element->reset = reset;
     element->args = args;
     TAILQ_INSERT_TAIL(&g_button_queue, element, entry);
 
     return 0;
 }
 
-void LightService_button_manager_unregister(button_event event, button_reset reset)
+void LightService_button_manager_unregister(button_event event)
 {
     struct button_entry* var = NULL;
 
     TAILQ_FOREACH(var, &g_button_queue, entry)
     {
-        if (var->event == event && var->reset == reset)
+        if (var->event == event)
         {
             TAILQ_REMOVE(&g_button_queue, var, entry);
             HAL_free(var);
