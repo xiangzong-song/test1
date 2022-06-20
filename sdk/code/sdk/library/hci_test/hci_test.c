@@ -15,6 +15,7 @@
 #include "uart_manager.h"
 #include "hci_test.h"
 #include "config.h"
+#include "platform.h"
 
 
 #define SKU_MAX_LEN                     5
@@ -141,7 +142,7 @@ extern uint8_t lld_test_stop(void);
 extern void flash_OTP_erase(uint32_t offset);
 extern void flash_OTP_write(uint32_t offset, uint32_t length, uint8_t* buffer);
 
-
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
 static uint8_t hci_sku_check_sum(uint8_t* sku, uint8_t len)
 {
     uint8_t check_sum  = 0x00;
@@ -551,4 +552,23 @@ int LightSdk_hci_test_check(void)
 
     return 0;
 }
+#elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+void LightSdk_hci_test_adjust(void)
+{
 
+}
+
+void LightSdk_hci_test_init(uint8_t* s_version, uint8_t* h_version)
+{
+
+}
+
+int LightSdk_hci_test_check(void)
+{
+    return 0;
+}
+#else
+
+#error "Wrong platform type."
+
+#endif

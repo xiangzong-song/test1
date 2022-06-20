@@ -11,6 +11,7 @@
 #include "log.h"
 #include "runtime.h"
 #include "uart_manager.h"
+#include "platform.h"
 
 
 #define GPIO_PORT_FUNC_UART0                0x05
@@ -75,6 +76,7 @@ static uart_trans_cb g_transparent_cb[UART_ID_COUNTS] = {NULL, NULL};
 static uart_hci_cb g_hci_callback = NULL;
 
 
+#if (PLATFORM_TYPE_ID != PLATFORM_FR5089D2)
 __attribute__((section("ram_code"))) void uart0_isr_ram(void)
 {
     uint8_t int_id;
@@ -120,6 +122,7 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
         volatile uint32_t line_status = uart_reg_ram->lsr;
     }
 }
+#endif
 
 __attribute__((section("ram_code"))) void uart1_isr_ram(void)
 {
