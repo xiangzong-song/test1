@@ -1,5 +1,8 @@
 #! /bin/bash
 
+
+git checkout ../code/sdk/system/platform.h
+
 if [ $1 = "FR8016" ]; then
     sed -i 's/ID_DEFAULT/PLATFORM_FR8016HA/g' ../code/sdk/system/platform.h
     sed -i 's/SIZE_DEFAULT/0x3A000/g' ../code/sdk/system/platform.h

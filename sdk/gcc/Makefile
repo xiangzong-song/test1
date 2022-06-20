@@ -93,5 +93,7 @@ include $(TEMPLATE_PATH)/Makefile.common
 SDK_INC_FILES += $(foreach dir, $(SDK_INC_FOLDERS), $(wildcard $(dir)/*.h)) 
 GOVEE_INC_FILES += $(foreach dir, $(GOVEE_SDK_FOLDERS), $(wildcard $(dir)/*.h)) 
 
+$(shell ./platform_config.sh $(PLATFORM))
+
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
