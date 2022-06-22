@@ -14,7 +14,7 @@
 
 #define LED_PIN_FUNC_SSP_OUT            0x04
 #define LED_PIN_FUNC_PWM                0x03
-#define LED_IC_MAX                      255
+#define LED_IC_MAX                      600
 #define LED_LUMI_IN_GRADUAL             0xf0
 #define GV_ABS(x, y)                    ((x > y) ? (x - y) : (y - x))
 
@@ -485,7 +485,8 @@ int LightSdk_led_data_set(uint8_t* data, uint32_t size, uint8_t cw, uint8_t ww, 
 
 int LightSdk_led_color_set(led_color_t color, uint8_t bright, led_mode_t mode)
 {
-    uint8_t buffer[LED_IC_MAX*3] = {0};
+    const uint16_t ic_count = gt_led_params.ic_count;
+    uint8_t buffer[ic_count*3];
     int i = 0;
 
     for (i = 0; i < gt_led_params.ic_count; i++)

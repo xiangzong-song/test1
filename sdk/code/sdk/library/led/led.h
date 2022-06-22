@@ -72,7 +72,7 @@ typedef struct
 
 typedef struct
 {
-    uint8_t ic_count;
+    uint16_t ic_count;
     led_ic_e ic_type;
     uint8_t with_ww;
     uint8_t lumi_min;
