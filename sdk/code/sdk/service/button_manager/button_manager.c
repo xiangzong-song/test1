@@ -177,5 +177,16 @@ void LightService_button_manager_unregister(button_event event)
 
 void LightService_button_manager_deinit(void)
 {
+    struct button_entry* var = NULL;
+
+    TAILQ_FOREACH(var, &g_button_queue, entry)
+    {
+        if (var)
+        {
+            HAL_free(var);
+        }
+    }
+
+    /* Warning : Not all resource be free */
 }
 
