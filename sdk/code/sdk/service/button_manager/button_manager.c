@@ -183,6 +183,7 @@ void LightService_button_manager_deinit(void)
     {
         if (var)
         {
+            TAILQ_REMOVE(&g_button_queue, var, entry);
             HAL_free(var);
         }
     }
