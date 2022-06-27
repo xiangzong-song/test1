@@ -18,6 +18,7 @@
 #include "ble_manager.h"
 #include "hal_os.h"
 
+#define BLE_WIFI_PT_MSG_CMD_RESPONSE        0x63
 
 #define BLE_MULTI_MSG_DATA_LEN              16
 #define BLE_NEW_MULTI_DATA_LEN              17
@@ -1023,7 +1024,7 @@ int LightService_ble_manager_data_response(msg_header_t* pt_header, ble_pack_t d
 
             if (pt_header->flag & MULTI_PACKAGE_END)
             {
-                uart_data.command = pt_header->uart_cmd;
+                uart_data.command = BLE_WIFI_PT_MSG_CMD_RESPONSE;
                 uart_data.buffer = multi_package;
                 uart_data.size = i * BLE_PKG_DATA_LEN;
                 LightService_uart_manager_send(pt_header->uart_id, uart_data);
@@ -1033,7 +1034,7 @@ int LightService_ble_manager_data_response(msg_header_t* pt_header, ble_pack_t d
         }
         else
         {
-            uart_data.command = pt_header->uart_cmd;
+            uart_data.command = BLE_WIFI_PT_MSG_CMD_RESPONSE;
             uart_data.buffer = (uint8_t*)&t_message;
             uart_data.size = sizeof(ble_msg_t);
             LightService_uart_manager_send(pt_header->uart_id, uart_data);
