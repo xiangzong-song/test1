@@ -13,7 +13,7 @@ if [ ! -z $1 ]; then
     elif [ $1 = "FR5089" ]; then
         PLATFORM_TYPE=FR5089
         PLATFORM_NAME=ESD_FR5089_Platform
-        SDK_FOLDER=fr801x_M3
+        SDK_FOLDER=fr801xt_M3
     else
         echo "Error : invalid platform '$1'"
         exit

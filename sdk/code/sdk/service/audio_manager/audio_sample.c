@@ -10,7 +10,10 @@
 #include "log.h"
 #include "audio_sample.h"
 #include "ringbuffer.h"
+#include "platform.h"
 
+
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
 #define AUDIO_SAMPLE_LEN                2
 #define I2S_IRQ_PRIO                    4
 #define codec_write(addr, data)         frspim_wr(FR_SPI_CODEC_CHAN, addr, 1, (uint32_t)data)
@@ -67,7 +70,7 @@ int LightSdk_audio_sample_size(void)
         SDK_PRINT(LOG_DEBUG, "gt_sample_lr is null.\r\n");
         return -1;
     }
-    
+
     int data_size = Lite_ring_buffer_size_get(gt_sample_lr);
 
     return data_size / AUDIO_SAMPLE_LEN;
@@ -78,7 +81,7 @@ int LightSdk_audio_sample_init(uint8_t rate, int gain_level)
 {
     int level = gain_level > 100 ? 100 : gain_level;
     uint32_t gain = 0;
-    
+
     pmu_codec_power_enable();
     codec_adc_init(rate);
     codec_write(0x18, 0x1C); //PGA  P/N exchange, P enable  N enable
@@ -142,4 +145,44 @@ int LightSdk_audio_sample_stop(void)
 
     return 0;
 }
+#else
+int LightSdk_audio_sample_read(int16_t* buffer, uint32_t sample_size)
+{
+    return 0;
+}
+
+int LightSdk_audio_sample_size(void)
+{
+    return 0;
+}
+
+int LightSdk_audio_sample_init(uint8_t rate, int gain_level)
+{
+    return 0;
+}
+
+void LightSdk_audio_sample_deinit(void)
+{
+}
+
+int LightSdk_audio_sample_ring_buffer_init(int buffer_size)
+{
+    return 0;
+}
+
+int LightSdk_audio_sample_ring_buffer_deinit(void)
+{
+    return 0;
+}
+
+int LightSdk_audio_sample_start(void)
+{
+    return 0;
+}
+
+int LightSdk_audio_sample_stop(void)
+{
+    return 0;
+}
+#endif
 

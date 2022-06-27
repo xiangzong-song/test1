@@ -15,7 +15,7 @@ endif
 
 ifeq ($(PLATFORM),FR5089)
     PLATFORM_PATH := ESD_FR5089_Platform
-    SDK_NAME := fr801x_M3
+    SDK_NAME := fr801xt_M3
     LIBRARY_TYPE := 508X
 endif
 

@@ -17,6 +17,8 @@
 #include "runtime.h"
 #include "ble_manager.h"
 #include "hal_os.h"
+#include "platform.h"
+
 
 #define BLE_WIFI_PT_MSG_CMD_RESPONSE        0x63
 
@@ -227,6 +229,17 @@ static const gatt_attribute_t g_govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] 
     },
 };
 
+
+static void ble_address_get(mac_addr_t *addr)
+{
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    gap_address_get(addr);
+#else
+    enum ble_addr_type addr_type;
+
+    gap_address_get(addr, &addr_type);
+#endif
+}
 
 static void ble_heartbeat_update(void)
 {
@@ -809,7 +822,7 @@ int LightService_ble_manager_init(ble_config_t* pt_ble, size_t size)
     gap_set_cb_func(ble_gap_event_callback);
     gap_bond_manager_init(BLE_BONDING_INFO_SAVE_ADDR, BLE_REMOTE_SERVICE_SAVE_ADDR, 8, true);
     gap_bond_manager_delete_all();
-    gap_address_get(&addr);
+    ble_address_get(&addr);
     SDK_PRINT(LOG_INFOR, "Local BDAddr : 0x%02x%02x%02x%02x%02x%02x\r\n", addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3],
               addr.addr[4], addr.addr[5]);
     g_gatt_service_id = ble_gatt_service_add(&g_govee_gatt_service);
@@ -878,7 +891,7 @@ int LightService_ble_manager_mac_get(uint8_t* mac)
         return -1;
     }
 
-    gap_address_get(&addr);
+    ble_address_get(&addr);
     memcpy(mac, &addr.addr[0], 6);
     return 0;
 }
