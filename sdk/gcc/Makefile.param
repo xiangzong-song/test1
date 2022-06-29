@@ -1,4 +1,5 @@
-MODULES_NAME += Govee_Light
+MODULES_NAME := Govee_Light
+FILE_PATH := ../code
 
 EASY_FLASH_ENABLE := 1
 
@@ -32,3 +33,9 @@ GOVEE_SDK_FILE_DIRS += sdk/service/audio_manager
 GOVEE_SDK_FILE_DIRS += sdk/service/watchdog_manager
 GOVEE_SDK_FILE_DIRS += sdk/runtime
 GOVEE_SDK_FILE_DIRS += sdk/system
+
+ifeq ($(PLATFORM),FR5089)
+    IGNORE_FILE += $(FILE_PATH)/sdk/service/audio_manager/audio_sample.c
+    IGNORE_FILE += $(FILE_PATH)/sdk/service/audio_manager/fft_fixed.c
+    IGNORE_FILE += $(FILE_PATH)/sdk/service/audio_manager/software_fft.c
+endif

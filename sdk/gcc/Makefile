@@ -1,5 +1,4 @@
 TEMPLATE_PATH := ./
-include $(TEMPLATE_PATH)/Makefile.param
 
 ifneq ($(platform), )
     PLATFORM=$(platform)
@@ -19,6 +18,9 @@ ifeq ($(PLATFORM),FR5089)
     LIBRARY_TYPE := 508X
 endif
 
+
+include $(TEMPLATE_PATH)/Makefile.param
+
 PROJECT_NAME     := Govee_SDK_Lib
 TARGETS          :=$(MODULES_NAME)_$(LIBRARY_TYPE)
 OUTPUT_DIRECTORY := build
@@ -27,7 +29,8 @@ GOVEE_SDK_SRC    := ../code/
 LINKER_SCRIPT    := ldscript.ld
 
 
-GOVEE_SDK_FILE_C += $(foreach dir, $(GOVEE_SDK_FILE_DIRS), $(wildcard $(GOVEE_SDK_SRC)$(dir)/*.c)) 
+GOVEE_SDK_FILE_ALL += $(foreach dir, $(GOVEE_SDK_FILE_DIRS), $(wildcard $(GOVEE_SDK_SRC)$(dir)/*.c)) 
+GOVEE_SDK_FILE_C = $(filter-out $(IGNORE_FILE), $(GOVEE_SDK_FILE_ALL)) 
 
 #driver
 SDK_ROOT_COMPONENTS_DRIVER=$(SDK_ROOT)/components/driver
