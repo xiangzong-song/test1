@@ -30,6 +30,13 @@ typedef enum _uart_id_e
     UART_ID_COUNTS
 } uart_id_e;
 
+typedef enum _uart_transparent_e
+{
+    TRANSPARENT_DISABLE = 0,
+    TRANSPARENT_READ_SINGLE,
+    TRANSPARENT_READ_CYCLE
+} uart_transparent_e;
+
 typedef struct _uart_config_t
 {
     hal_port_t rx;
@@ -56,7 +63,7 @@ void LightService_uart_manager_unregister(uart_msg callback);
 void LightService_uart_manager_deinit(uart_id_e id);
 int LightService_uart_manager_send(uart_id_e id, uart_data_t data);
 void LightService_uart_manager_print_set(uint8_t* type, uint8_t count, uint8_t flag);
-void LightService_uart_manager_transparent(uint8_t enable, uart_id_e id, uart_trans_cb cb);
+void LightService_uart_manager_transparent(uart_transparent_e type, uart_id_e id, uart_trans_cb cb);
 int LightService_uart_manager_hci_mode(uart_id_e id, uart_hci_cb cb);
 
 #endif

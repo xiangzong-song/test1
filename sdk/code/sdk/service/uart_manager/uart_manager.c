@@ -71,7 +71,7 @@ static uint8_t g_task_init_flag = 0;
 static LR_handler gp_uart_lr[UART_ID_COUNTS] = {NULL, NULL};
 static uint8_t g_debug_print_type[UART_DEBUG_TYPE_MAX] = {0};
 static uint8_t g_debug_print_flag = 0;
-static uint8_t g_transparent_enable[UART_ID_COUNTS] = {0, 0};
+static uart_transparent_e g_transparent_type[UART_ID_COUNTS] = {TRANSPARENT_DISABLE, TRANSPARENT_DISABLE};
 static uart_trans_cb g_transparent_cb[UART_ID_COUNTS] = {NULL, NULL};
 static uart_hci_cb g_hci_callback = NULL;
 
@@ -94,12 +94,20 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
         }
         else
         {
-            if (g_transparent_enable[UART_ID_0]) //transparent translation mode
+            if (g_transparent_type[UART_ID_0] && g_transparent_cb[UART_ID_0]) //transparent translation mode
             {
-                if (g_transparent_cb[UART_ID_0])
+                if (g_transparent_type[UART_ID_0] == TRANSPARENT_READ_SINGLE)
                 {
                     c = uart_reg_ram->u1.data;
                     (*g_transparent_cb[UART_ID_0])(c);
+                }
+                else
+                {
+                    while (uart_reg_ram->lsr & 0x01)
+                    {
+                        c = uart_reg_ram->u1.data;
+                        (*g_transparent_cb[UART_ID_0])(c);
+                    }
                 }
             }
             else
@@ -135,12 +143,20 @@ __attribute__((section("ram_code"))) void uart1_isr_ram(void)
 
     if (int_id == 0x04 || int_id == 0x0c )   /* Receiver data available or Character time-out indication */
     {
-        if (g_transparent_enable[UART_ID_1])
+        if (g_transparent_type[UART_ID_1] && g_transparent_cb[UART_ID_1])
         {
-            if (g_transparent_cb[UART_ID_1])
+            if (g_transparent_type[UART_ID_1] == TRANSPARENT_READ_SINGLE)
             {
                 c = uart_reg_ram->u1.data;
                 (*g_transparent_cb[UART_ID_1])(c);
+            }
+            else
+            {
+                while (uart_reg_ram->lsr & 0x01)
+                {
+                    c = uart_reg_ram->u1.data;
+                    (*g_transparent_cb[UART_ID_1])(c);
+                }
             }
         }
         else
@@ -531,18 +547,10 @@ void LightService_uart_manager_print_set(uint8_t* type, uint8_t count, uint8_t f
     g_debug_print_flag = flag;
 }
 
-void LightService_uart_manager_transparent(uint8_t enable, uart_id_e id, uart_trans_cb cb)
+void LightService_uart_manager_transparent(uart_transparent_e type, uart_id_e id, uart_trans_cb cb)
 {
-    if (enable)
-    {
-        g_transparent_enable[id] = 1;
-        g_transparent_cb[id] = cb;
-    }
-    else
-    {
-        g_transparent_enable[id] = 0;
-        g_transparent_cb[id] = NULL;
-    }
+    g_transparent_type[id] = type;
+    g_transparent_cb[id] = (type == TRANSPARENT_DISABLE ? NULL : cb);
 }
 
 int LightService_uart_manager_hci_mode(uart_id_e id, uart_hci_cb cb)
