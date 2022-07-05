@@ -19,6 +19,7 @@
 #define UART_PORT(x)                        ((x == UART_ID_0) ? UART0 : UART1)
 #define UART_IRQ(x)                         ((x == UART_ID_0) ? UART0_IRQn : UART1_IRQn)
 
+#define UART_RING_BUFFER_MIN                5
 #define UART_MSG_MAX_SIZE                   820
 #define UART_MSG_START_CODE                 0x55
 #define UART_MSG_VERSION                    0x01
@@ -429,13 +430,15 @@ static void uart_msg_process(void* args)
 
 int LightService_uart_manager_init(uart_id_e id, uart_config_t config)
 {
+    uint32_t buffer_len = (config.buffer_size > 0) ? config.buffer_size : UART_RING_BUFFER_MIN;
+
     if (id >= UART_ID_COUNTS)
     {
         SDK_PRINT(LOG_ERROR, "Wrong uart id.\r\n");
         return -1;
     }
 
-    gp_uart_lr[id] = Lite_ring_buffer_init(config.buffer_size);
+    gp_uart_lr[id] = Lite_ring_buffer_init(buffer_len);
     if (gp_uart_lr[id] == NULL)
     {
         SDK_PRINT(LOG_ERROR, "Uart ring buffer init failed.\r\n");

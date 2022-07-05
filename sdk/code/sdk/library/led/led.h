@@ -63,6 +63,13 @@ typedef enum
 
 typedef struct
 {
+    uint8_t r_percent;
+    uint8_t g_percent;
+    uint8_t b_percent;
+} white_balance_t;
+
+typedef struct
+{
     uint8_t enable;
     hal_port_e port;
     hal_port_bit_e bit;
@@ -79,6 +86,7 @@ typedef struct
     uint8_t refresh_base;
     led_limit_e limit_type;
     uint32_t current_limit;
+    white_balance_t wb;
     led_pwm_t pwm_cw;
     led_pwm_t pwm_ww;
     led_control_e led_rgb_type;

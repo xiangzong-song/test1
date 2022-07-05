@@ -188,45 +188,48 @@ static void led_data_sort(led_data_t* pt_dst, uint8_t* data, uint32_t size, uint
 {
     uint32_t single_sum = 0;
     uint32_t color_sum = 0;
+    uint8_t wb_r = gt_led_params.wb.r_percent;
+    uint8_t wb_g = gt_led_params.wb.g_percent;
+    uint8_t wb_b = gt_led_params.wb.b_percent;
     int i = 0;
 
     for (i = 0; i < size / 3; i++)
     {
         if (gt_led_params.ic_type == LED_GRB)
         {
-            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+1] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+2] * bright / LED_MAX_BRIGHTNESS);
+            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+1] * bright * wb_r / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3] * bright * wb_g / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+2] * bright * wb_b / LED_MAX_BRIGHTNESS / 100);
         }
         else if(gt_led_params.ic_type == LED_RGB)
         {
-            pt_dst->rgb[i*3] = (uint8_t)(data[i*3] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+1] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+2] * bright / LED_MAX_BRIGHTNESS);
+            pt_dst->rgb[i*3] = (uint8_t)(data[i*3] * bright * wb_r / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+1] * bright * wb_g / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+2] * bright * wb_b / LED_MAX_BRIGHTNESS / 100);
         }
         else if(gt_led_params.ic_type == LED_RBG)
         {
-            pt_dst->rgb[i*3] = (uint8_t)(data[i*3] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+2] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+1] * bright / LED_MAX_BRIGHTNESS);
+            pt_dst->rgb[i*3] = (uint8_t)(data[i*3] * bright * wb_r / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+2] * bright * wb_g / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+1] * bright * wb_b / LED_MAX_BRIGHTNESS / 100);
         }
         else if(gt_led_params.ic_type == LED_GBR)
         {
-            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+1] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+2] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3] * bright / LED_MAX_BRIGHTNESS);
+            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+1] * bright * wb_r / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+2] * bright * wb_g / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3] * bright * wb_b / LED_MAX_BRIGHTNESS / 100);
         }
         else if(gt_led_params.ic_type == LED_BRG)
         {
-            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+2] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+1] * bright / LED_MAX_BRIGHTNESS);
+            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+2] * bright * wb_r / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3] * bright * wb_g / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3+1] * bright * wb_b / LED_MAX_BRIGHTNESS / 100);
         }
         else if(gt_led_params.ic_type == LED_BGR)
         {
-            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+2] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+1] * bright / LED_MAX_BRIGHTNESS);
-            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3] * bright / LED_MAX_BRIGHTNESS);
+            pt_dst->rgb[i*3] = (uint8_t)(data[i*3+2] * bright * wb_r / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+1] = (uint8_t)(data[i*3+1] * bright * wb_g / LED_MAX_BRIGHTNESS / 100);
+            pt_dst->rgb[i*3+2] = (uint8_t)(data[i*3] * bright * wb_b / LED_MAX_BRIGHTNESS / 100);
         }
 
         single_sum = pt_dst->rgb[3 * i] + pt_dst->rgb[3 * i + 1] + pt_dst->rgb[3 * i + 2];
