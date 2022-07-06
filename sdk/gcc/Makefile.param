@@ -35,6 +35,7 @@ GOVEE_SDK_FILE_DIRS += sdk/runtime
 GOVEE_SDK_FILE_DIRS += sdk/system
 
 ifeq ($(PLATFORM),FR5089)
+    GOVEE_SDK_FILE_DIRS += sdk/service/ipc_manager
     IGNORE_FILE += $(FILE_PATH)/sdk/service/audio_manager/audio_sample.c
     IGNORE_FILE += $(FILE_PATH)/sdk/library/fft/fft_fixed.c
     IGNORE_FILE += $(FILE_PATH)/sdk/library/fft/software_fft.c
