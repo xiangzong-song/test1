@@ -4,6 +4,7 @@
 #include "log.h"
 #include "runtime.h"
 #include "device_time.h"
+#include "platform.h"
 
 
 struct loop_task_entry
@@ -68,7 +69,10 @@ void LightRuntime_init(void)
     TAILQ_INIT(&g_event_task);
 
     g_runtime_task = os_task_create(runtime_event_task);
+
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
     os_user_loop_event_set(runtime_loop_task);
+#endif
 }
 
 int LightRuntime_loop_task_register(loop_task task, uint32_t interval, void* args)
@@ -145,3 +149,7 @@ int LightRuntime_event_task_post(uint16_t event_id, void* param, int len)
     return 0;
 }
 
+void LightRuntime_loop_handler(void)
+{
+    runtime_loop_task();
+}

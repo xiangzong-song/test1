@@ -10,5 +10,7 @@ int LightRuntime_loop_task_register(loop_task task, uint32_t interval, void* arg
 void LightRuntime_loop_task_unregister(loop_task task);
 int LightRuntime_event_task_register(uint16_t* event_id, event_task task, void* args);
 int LightRuntime_event_task_post(uint16_t event_id, void* param, int len);
+void LightRuntime_loop_handler(void);
+
 
 #endif
