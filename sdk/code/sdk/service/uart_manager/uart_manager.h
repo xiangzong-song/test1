@@ -30,6 +30,12 @@ typedef enum _uart_id_e
     UART_ID_COUNTS
 } uart_id_e;
 
+typedef enum _uart_channel_e
+{
+    UART_CHANNEL_BASE = 0,
+    UART_CHANNEL_OTHER
+} uart_channel_e;
+
 typedef enum _uart_transparent_e
 {
     TRANSPARENT_DISABLE = 0,
@@ -39,8 +45,10 @@ typedef enum _uart_transparent_e
 
 typedef struct _uart_config_t
 {
+    uint8_t b_share;
     hal_port_t rx;
-    hal_port_t tx;
+    hal_port_t tx_base;
+    hal_port_t tx_other;
     uart_baud_e speed;
     uint32_t buffer_size;
 } uart_config_t;
@@ -62,6 +70,7 @@ int LightService_uart_manager_register(uart_msg callback, void* args);
 void LightService_uart_manager_unregister(uart_msg callback);
 void LightService_uart_manager_deinit(uart_id_e id);
 int LightService_uart_manager_send(uart_id_e id, uart_data_t data);
+int LightService_uart_manager_send_channel(uart_id_e id, uart_data_t data, uart_channel_e channel);
 void LightService_uart_manager_print_set(uint8_t* type, uint8_t count, uint8_t flag);
 void LightService_uart_manager_transparent(uart_transparent_e type, uart_id_e id, uart_trans_cb cb);
 int LightService_uart_manager_hci_mode(uart_id_e id, uart_hci_cb cb);

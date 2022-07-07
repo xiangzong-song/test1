@@ -13,6 +13,7 @@
 #include "uart_manager.h"
 
 
+#define GPIO_PORT_FUNC_GPIO                 0x00
 #define GPIO_PORT_FUNC_UART0                0x05
 #define GPIO_PORT_FUNC_UART1                0x06
 #define GPIO_FUNC_UART(x)                   ((x == UART_ID_0) ? GPIO_PORT_FUNC_UART0 : GPIO_PORT_FUNC_UART1)
@@ -74,6 +75,7 @@ static uint8_t g_debug_print_flag = 0;
 static uart_transparent_e g_transparent_type[UART_ID_COUNTS] = {TRANSPARENT_DISABLE, TRANSPARENT_DISABLE};
 static uart_trans_cb g_transparent_cb[UART_ID_COUNTS] = {NULL, NULL};
 static uart_hci_cb g_hci_callback = NULL;
+static uart_config_t gt_uart_config[UART_ID_COUNTS] = {{.b_share = 0}, {.b_share = 0}};
 
 
 __attribute__((section("ram_code"))) void uart0_isr_ram(void)
@@ -225,6 +227,20 @@ static void uart_data_print(uart_header_t* header, uint8_t* buffer, uint32_t len
         }
 
         HAL_printf("\r\n");
+    }
+}
+
+static void uart_port_switch(uart_id_e id, uart_channel_e channel)
+{
+    if (channel == UART_CHANNEL_BASE)
+    {
+        system_set_port_mux(gt_uart_config[id].tx_base.GPIO_Port, gt_uart_config[id].tx_base.GPIO_Pin, GPIO_FUNC_UART(id));
+        system_set_port_mux(gt_uart_config[id].tx_other.GPIO_Port, gt_uart_config[id].tx_other.GPIO_Pin, GPIO_PORT_FUNC_GPIO);
+    }
+    else
+    {
+        system_set_port_mux(gt_uart_config[id].tx_base.GPIO_Port, gt_uart_config[id].tx_base.GPIO_Pin, GPIO_PORT_FUNC_GPIO);
+        system_set_port_mux(gt_uart_config[id].tx_other.GPIO_Port, gt_uart_config[id].tx_other.GPIO_Pin, GPIO_FUNC_UART(id));
     }
 }
 
@@ -445,9 +461,18 @@ int LightService_uart_manager_init(uart_id_e id, uart_config_t config)
         return -1;
     }
 
+    gt_uart_config[id] = config;
     system_set_port_pull(GPIO2PORT(config.rx.GPIO_Port, config.rx.GPIO_Pin), true);
     system_set_port_mux(config.rx.GPIO_Port, config.rx.GPIO_Pin, GPIO_FUNC_UART(id));
-    system_set_port_mux(config.tx.GPIO_Port, config.tx.GPIO_Pin, GPIO_FUNC_UART(id));
+
+    if (config.b_share == 0)
+    {
+        system_set_port_mux(config.tx_base.GPIO_Port, config.tx_base.GPIO_Pin, GPIO_FUNC_UART(id));
+    }
+    else
+    {
+        uart_port_switch(id, UART_CHANNEL_BASE);
+    }
 
     uart_init(UART_PORT(id), config.speed);
     NVIC_EnableIRQ(UART_IRQ(id));
@@ -531,6 +556,33 @@ int LightService_uart_manager_send(uart_id_e id, uart_data_t data)
     }
 
     return 0;
+}
+
+int LightService_uart_manager_send_channel(uart_id_e id, uart_data_t data, uart_channel_e channel)
+{
+    int ret = 0;
+
+    if (gt_uart_config[id].b_share == 0)
+    {
+        ret = LightService_uart_manager_send(id, data);
+    }
+    else
+    {
+        if (channel == UART_CHANNEL_BASE)
+        {
+            ret = LightService_uart_manager_send(id, data);
+        }
+        else
+        {
+            uart_finish_transfers(UART_PORT(id));
+            uart_port_switch(id, channel);
+            ret = LightService_uart_manager_send(id, data);
+            uart_finish_transfers(UART_PORT(id));
+            uart_port_switch(id, UART_CHANNEL_BASE);
+        }
+    }
+
+    return ret;
 }
 
 void LightService_uart_manager_print_set(uint8_t* type, uint8_t count, uint8_t flag)

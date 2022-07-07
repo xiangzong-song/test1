@@ -413,7 +413,7 @@ void LightService_ipc_manager_deinit(void)
 
 int LightService_ipc_manager_init(void)
 {
-    uart_config_t config = {{HAL_PORT_A, HAL_BIT_2}, {HAL_PORT_A, HAL_BIT_3}, BAUD_921600, 0};
+    uart_config_t config = {0, {HAL_PORT_A, HAL_BIT_2}, {HAL_PORT_A, HAL_BIT_3}, {}, BAUD_921600, 0};
 
     LightService_uart_manager_transparent(TRANSPARENT_READ_CYCLE, IPC_UART, ipc_data_receive);
     LightService_uart_manager_init(IPC_UART, config);
