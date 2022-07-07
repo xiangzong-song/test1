@@ -13,7 +13,6 @@
 #include "platform.h"
 
 
-#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
 #define AUDIO_SAMPLE_LEN                2
 #define I2S_IRQ_PRIO                    4
 #define codec_write(addr, data)         frspim_wr(FR_SPI_CODEC_CHAN, addr, 1, (uint32_t)data)
@@ -145,44 +144,5 @@ int LightSdk_audio_sample_stop(void)
 
     return 0;
 }
-#else
-int LightSdk_audio_sample_read(int16_t* buffer, uint32_t sample_size)
-{
-    return 0;
-}
 
-int LightSdk_audio_sample_size(void)
-{
-    return 0;
-}
-
-int LightSdk_audio_sample_init(uint8_t rate, int gain_level)
-{
-    return 0;
-}
-
-void LightSdk_audio_sample_deinit(void)
-{
-}
-
-int LightSdk_audio_sample_ring_buffer_init(int buffer_size)
-{
-    return 0;
-}
-
-int LightSdk_audio_sample_ring_buffer_deinit(void)
-{
-    return 0;
-}
-
-int LightSdk_audio_sample_start(void)
-{
-    return 0;
-}
-
-int LightSdk_audio_sample_stop(void)
-{
-    return 0;
-}
-#endif
 

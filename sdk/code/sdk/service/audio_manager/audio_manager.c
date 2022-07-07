@@ -4,18 +4,21 @@
 #include "audio_manager.h"
 #include "hal_os.h"
 #include "log.h"
-#include "audio_sample.h"
-#include "software_fft.h"
 #include "sys_queue.h"
 #include "ringbuffer.h"
 #include "runtime.h"
-#include "fft_fixed.h"
+
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
 #include "audio_sample.h"
+#include "fft_fixed.h"
+#include "software_fft.h"
 
 #define AVG_NUM 100
 #define RM_DC_FILTER_TIMES 63
 #define RM_DC_SELECT_TIMES 126
 #define BEAT_KEEP_TIMES 15
+#endif
+
 
 typedef struct
 {
@@ -49,15 +52,18 @@ static audio_para_t audio_para =
         .noise_value = 10};
 
 static uint8_t g_audio_init_flag = 0;
+static uint8_t audio_start_flag = 0;
 static struct audio_queue g_audio_queue;
+static audio_info_t audio_info = {0};
+
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
 static int16_t audio_data_idx = 0;
 static int16_t audio_data_cnt = 0;
 static uint16_t *audio_data_tab = NULL;
 static int16_t audio_time_count = 0;
 static int16_t audio_silence_count = 0;
-static uint8_t audio_start_flag = 0;
-static audio_info_t audio_info = {0};
 static int *audio_fft_data = NULL;
+#endif
 
 #define AUDIO_TASK_INIT_CHECK                                        \
     do                                                               \
@@ -71,115 +77,105 @@ static int *audio_fft_data = NULL;
     } while (0)
 
 /****************************************************************
- *  static function
+ *  8016 static function
  *****************************************************************/
-static int audio_hw_init(audio_src_e src)
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+static int audio_hw_init_8016(audio_init_t init)
 {
-    if (src == DSP)
+    if (init.sample_rate != CODEC_SAMPLE_RATE_48000 &&
+        init.sample_rate != CODEC_SAMPLE_RATE_44100 &&
+        init.sample_rate != CODEC_SAMPLE_RATE_24000 &&
+        init.sample_rate != CODEC_SAMPLE_RATE_16000 &&
+        init.sample_rate != CODEC_SAMPLE_RATE_8000)
     {
-        /*
-        dsp hardware init.
-        */
-    }
-    else
-    {
-        if (audio_init.sample_rate != CODEC_SAMPLE_RATE_48000 &&
-            audio_init.sample_rate != CODEC_SAMPLE_RATE_44100 &&
-            audio_init.sample_rate != CODEC_SAMPLE_RATE_24000 &&
-            audio_init.sample_rate != CODEC_SAMPLE_RATE_16000 &&
-            audio_init.sample_rate != CODEC_SAMPLE_RATE_8000)
-        {
-            SDK_PRINT(LOG_ERROR, "Invalid sample_rate.\r\n");
-            return -1;
-        }
-
-        if (audio_init.sample_size < 256)
-        {
-            SDK_PRINT(LOG_WARNING, "sample_size should be over 256.\r\n");
-        }
-
-        LightSdk_audio_sample_init(audio_init.sample_rate, audio_init.gain_level);
+        SDK_PRINT(LOG_ERROR, "Invalid sample_rate.\r\n");
+        return -1;
     }
 
+    if (init.sample_size < 256)
+    {
+        SDK_PRINT(LOG_WARNING, "sample_size should be over 256.\r\n");
+    }
+
+    LightSdk_audio_sample_init(init.sample_rate, init.gain_level);
     return 0;
 }
 
-static void audio_hw_deinit(audio_src_e src)
+static void audio_hw_deinit_8016(void)
 {
-    if (audio_para.audio_src == DSP)
-    {
-        /*
-        dsp hardware deinit.
-        */
-    }
-    else
-    {
-        LightSdk_audio_sample_deinit();
-    }
+    LightSdk_audio_sample_deinit();
 }
 
-static void audio_hw_start(audio_src_e src)
+static int audio_manager_start_8016(audio_para_t para)
 {
-    if (src == DSP)
+    uint32_t sample_size;
+
+    if (!audio_start_flag)
     {
-        /*
-        dsp hardware start code.
-        */
-    }
-    else
-    {
+        audio_start_flag = 1;
+
+        sample_size = audio_init.sample_size;
+
+        if (para.beat_sens > 100)
+        {
+            para.beat_sens = 100;
+            SDK_PRINT(LOG_WARNING, "beat_sens should be [0~100].\r\n");
+        }
+
+        memcpy(&audio_para, &para, sizeof(audio_para_t));
+    
+        //initialization of variable
+        audio_data_idx = 0;
+        audio_data_cnt = 0;
+        audio_time_count = 0;
+        audio_silence_count = 0;
+
+        // buffer malloc
+        if (audio_data_tab == NULL)
+        {
+            audio_data_tab = (int16_t *)HAL_malloc(AVG_NUM * sizeof(int16_t));
+            memset(audio_data_tab, 0, sizeof(audio_data_tab));
+        }
+
+        if (para.info_en_bits & FFT_BIT)
+        {
+            LightSdk_fft_init();
+            if (audio_fft_data == NULL)
+            {
+                audio_fft_data = (int *)HAL_malloc(2 * sample_size * sizeof(int));
+            }
+        }
+        LightSdk_audio_sample_ring_buffer_init(1024);
+
+        // audio source hardware start
         LightSdk_audio_sample_start();
     }
 }
 
-static void audio_hw_stop(audio_src_e src)
+static int audio_manager_stop_8016(void)
 {
-    if (src == DSP)
+    if (audio_start_flag)
     {
-        /*
-        dsp hardware stop code.
-        */
-    }
-    else
-    {
+        audio_start_flag = 0;
+
+        // audio source hardware stop
         LightSdk_audio_sample_stop();
+
+        // buffer free
+        LightSdk_audio_sample_ring_buffer_deinit();
+        if (audio_data_tab)
+        {
+            HAL_free(audio_data_tab);
+            audio_data_tab = NULL;
+        }
+
+        LightSdk_fft_deinit();
+        if (audio_fft_data)
+        {
+            HAL_free(audio_fft_data);
+            audio_fft_data = NULL;
+        }
     }
-}
-
-static int audio_sample_size_get(audio_src_e src)
-{
-    int size = 0;
-
-    if (src == DSP)
-    {
-        /*
-        dsp audio_sample_read.
-        */
-    }
-    else
-    {
-        size = LightSdk_audio_sample_size();
-    }
-
-    return size;
-}
-
-static int audio_sample_read(audio_src_e src, int16_t *buffer, uint32_t sample_size)
-{
-    int ret = 0;
-
-    if (src == DSP)
-    {
-        /*
-        dsp audio read code.
-        */
-    }
-    else
-    {
-        ret = LightSdk_audio_sample_read(buffer, sample_size);
-    }
-
-    return ret;
 }
 
 static int audio_remove_data_dc_offset(int16_t *sample_data, uint32_t sample_size)
@@ -435,23 +431,17 @@ static uint8_t audio_music_style_get(int16_t *sample_data, audio_para_t para)
     return music_style;
 }
 
-static void audio_process(void *args)
+static void audio_info_update_8016(void)
 {
-    struct audio_entry *var = NULL;
     uint32_t sample_size = audio_init.sample_size;
     int16_t sample_data[sample_size];
     uint8_t percent = 0;
 
-    if (audio_start_flag == 0)
-    {
-        return;
-    }
-
-    if (audio_sample_size_get(audio_para.audio_src) >= sample_size)
+    if (LightSdk_audio_sample_size() >= sample_size)
     {
         memset(sample_data, 0, sizeof(sample_data));
 
-        audio_sample_read(audio_para.audio_src, sample_data, sample_size);
+        LightSdk_audio_sample_read(sample_data, sample_size);
         audio_remove_data_dc_offset(sample_data, sample_size);
 
         audio_info.update_bits = 0;
@@ -500,26 +490,99 @@ static void audio_process(void *args)
                 audio_info.update_bits |= STYLE_BIT;
             }
         }
+    }
+}
 
-        if (audio_info.update_bits)
+/****************************************************************
+ *  5089 static function
+ *****************************************************************/
+#elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+static int audio_hw_init_5089(audio_init_t init)
+{
+    
+    return 0;
+}
+
+static int audio_hw_deinit_5089(void)
+{
+    
+    return 0;
+}
+
+static int audio_manager_start_5089(audio_para_t para)
+{
+    if (!audio_start_flag)
+    {
+        audio_start_flag = 1;
+
+        if (para.info_en_bits & FFT_BIT)
         {
-            TAILQ_FOREACH(var, &g_audio_queue, entry)
+            if (audio_fft_data == NULL)
             {
-                if (var->callback)
-                {
-                    (*var->callback)(audio_info, var->args);
-                }
+                audio_fft_data = (int *)HAL_malloc(2 * sample_size * sizeof(int));
             }
         }
     }
 }
+
+static int audio_manager_stop_5089(void)
+{
+    if (audio_start_flag)
+    {
+        audio_start_flag = 0;
+
+        if (audio_fft_data)
+        {
+            HAL_free(audio_fft_data);
+            audio_fft_data = NULL;
+        }
+    }
+}
+
+static void audio_info_update_5089(void)
+{
+    
+}
+#endif
+
+static void audio_process(void *args)
+{
+    struct audio_entry *var = NULL;
+    
+    if (audio_start_flag == 0)
+    {
+        return;
+    }
+
+    #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    audio_info_update_8016();
+    #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2 )
+    audio_info_update_5089();
+    #endif
+        
+    if (audio_info.update_bits)
+    {
+        TAILQ_FOREACH(var, &g_audio_queue, entry)
+        {
+            if (var->callback)
+            {
+                (*var->callback)(audio_info, var->args);
+            }
+        }
+    }
+}
+
 
 /****************************************************************
  *  public function
  *****************************************************************/
 int LightService_audio_manager_init(void)
 {
-    audio_hw_init(audio_para.audio_src);
+    #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    audio_hw_init_8016(audio_init);
+    #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+    audio_hw_init_5089(audio_init);
+    #endif
 
     AUDIO_TASK_INIT_CHECK;
 
@@ -528,7 +591,11 @@ int LightService_audio_manager_init(void)
 
 void LightService_audio_manager_deinit(void)
 {
-    audio_hw_deinit(audio_para.audio_src);
+    #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    audio_hw_deinit_8016();
+    #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+    audio_hw_deinit_5089();
+    #endif
 }
 
 int LightService_audio_manager_register(audio_info_proc callback, void *args)
@@ -567,72 +634,22 @@ void LightService_audio_manager_unregister(audio_info_proc callback)
 
 int LightService_audio_manager_start(audio_para_t para)
 {
-    uint32_t sample_size = audio_init.sample_size;
-
-    memcpy(&audio_para, &para, sizeof(audio_para_t));
-
-    if (audio_para.beat_sens > 100)
-    {
-        audio_para.beat_sens = 100;
-        SDK_PRINT(LOG_WARNING, "beat_sens should be [0~100].\r\n");
-    }
-
-    if (!audio_start_flag)
-    {
-        //initialization of variable
-        audio_start_flag = 1;
-        audio_data_idx = 0;
-        audio_data_cnt = 0;
-        audio_time_count = 0;
-        audio_silence_count = 0;
-
-        // buffer malloc
-        if (audio_data_tab == NULL)
-        {
-            audio_data_tab = (int16_t *)HAL_malloc(AVG_NUM * sizeof(int16_t));
-            memset(audio_data_tab, 0, sizeof(audio_data_tab));
-        }
-
-        if (audio_para.info_en_bits & FFT_BIT)
-        {
-            LightSdk_fft_init();
-            if (audio_fft_data == NULL)
-            {
-                audio_fft_data = (int *)HAL_malloc(2 * sample_size * sizeof(int));
-            }
-        }
-        LightSdk_audio_sample_ring_buffer_init(1024);
-
-        // audio source hardware start
-        audio_hw_start(audio_para.audio_src);
-    }
-
+    #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    audio_manager_start_8016(para);
+    #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+    audio_manager_start_5089(para);
+    #endif
+    
     return 0;
 }
 
 int LightService_audio_manager_stop(void)
 {
-    if (audio_start_flag)
-    {
-        audio_start_flag = 0;
+    #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    audio_manager_stop_8016();
+    #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+    audio_manager_stop_5089();
+    #endif
 
-        // audio source hardware stop
-        audio_hw_stop(audio_para.audio_src);
-
-        // buffer free
-        LightSdk_audio_sample_ring_buffer_deinit();
-        if (audio_data_tab)
-        {
-            HAL_free(audio_data_tab);
-            audio_data_tab = NULL;
-        }
-
-        LightSdk_fft_deinit();
-        if (audio_fft_data)
-        {
-            HAL_free(audio_fft_data);
-            audio_fft_data = NULL;
-        }
-    }
     return 0;
 }
