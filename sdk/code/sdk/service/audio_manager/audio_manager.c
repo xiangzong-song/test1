@@ -56,6 +56,7 @@ static uint8_t g_audio_init_flag = 0;
 static uint8_t audio_start_flag = 0;
 static struct audio_queue g_audio_queue;
 static audio_info_t audio_info = {0};
+static int *audio_fft_data = NULL;
 
 #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
 static int16_t audio_data_idx = 0;
@@ -63,8 +64,8 @@ static int16_t audio_data_cnt = 0;
 static uint16_t *audio_data_tab = NULL;
 static int16_t audio_time_count = 0;
 static int16_t audio_silence_count = 0;
-static int *audio_fft_data = NULL;
 #endif
+
 
 #define AUDIO_TASK_INIT_CHECK                                        \
     do                                                               \
@@ -518,10 +519,12 @@ static int audio_manager_start_5089(audio_para_t para)
 
         if (para.info_en_bits & FFT_BIT)
         {
+        #if 0
             if (audio_fft_data == NULL)
             {
                 audio_fft_data = (int *)HAL_malloc(2 * sample_size * sizeof(int));
             }
+        #endif
         }
     }
 }
