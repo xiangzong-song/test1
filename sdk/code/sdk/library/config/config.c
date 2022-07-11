@@ -6,6 +6,7 @@
 #include "easyflash.h"
 #include "log.h"
 #include "config.h"
+#include "platform.h"
 
 
 #define CONFIG_INIT_KEY             "INIT"
@@ -79,7 +80,9 @@ int LightSdk_config_env_reset(uint8_t reboot)
     if (reboot)
     {
         co_delay_100us(100);
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
         platform_reset_patch(0);
+#endif
     }
 
     return 0;

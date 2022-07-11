@@ -4,6 +4,7 @@
 
 #include "os_mem.h"
 #include "hal_os.h"
+#include "platform.h"
 
 
 extern int print(char **out, const char *format, va_list args);

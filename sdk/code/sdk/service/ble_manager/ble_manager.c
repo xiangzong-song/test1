@@ -245,6 +245,7 @@ static void ble_ota_init(void)
 {
 #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
     app_ota_init(ble_ota_event_callback);
+    ota_gatt_add_service();
 #else
         /* To be complete */
 #endif
@@ -859,7 +860,6 @@ int LightService_ble_manager_init(ble_config_t* pt_ble, size_t size)
     BLE_TASK_INIT_CHECK;
 
     ble_ota_init();
-    ota_gatt_add_service();
 
     return 0;
 }

@@ -10,9 +10,18 @@ ifeq ($(EASY_FLASH_ENABLE), 1)
 endif
 
 
-GOVEE_SDK_FILE_DIRS += hal/gpio
-GOVEE_SDK_FILE_DIRS += hal/pwm
-GOVEE_SDK_FILE_DIRS += hal/os
+ifeq ($(PLATFORM),FR5089)
+    HAL_DIR = FR5089D2
+endif
+
+ifeq ($(PLATFORM),FR8016)
+    HAL_DIR = FR8016HA
+endif
+
+
+GOVEE_SDK_FILE_DIRS += hal/$(HAL_DIR)/gpio
+GOVEE_SDK_FILE_DIRS += hal/$(HAL_DIR)/pwm
+GOVEE_SDK_FILE_DIRS += hal/$(HAL_DIR)/os
 
 GOVEE_SDK_FILE_DIRS += sdk/library/watchdog
 GOVEE_SDK_FILE_DIRS += sdk/library/time
