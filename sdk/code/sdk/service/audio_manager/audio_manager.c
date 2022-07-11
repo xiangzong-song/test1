@@ -7,6 +7,7 @@
 #include "sys_queue.h"
 #include "ringbuffer.h"
 #include "runtime.h"
+#include "platform.h"
 
 #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
 #include "audio_sample.h"
@@ -123,7 +124,7 @@ static int audio_manager_start_8016(audio_para_t para)
         }
 
         memcpy(&audio_para, &para, sizeof(audio_para_t));
-    
+
         //initialization of variable
         audio_data_idx = 0;
         audio_data_cnt = 0;
@@ -409,7 +410,7 @@ static int audio_beat_value_get(int16_t *sample_data, audio_para_t para)
     // HAL_printf("o%do",volume_sensitivity);
     // HAL_printf("u%du",th);
     // HAL_printf("p%dp",data_tab_avg);
-    
+
     return beat_value;
 }
 
@@ -499,13 +500,13 @@ static void audio_info_update_8016(void)
 #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
 static int audio_hw_init_5089(audio_init_t init)
 {
-    
+
     return 0;
 }
 
 static int audio_hw_deinit_5089(void)
 {
-    
+
     return 0;
 }
 
@@ -541,14 +542,14 @@ static int audio_manager_stop_5089(void)
 
 static void audio_info_update_5089(void)
 {
-    
+
 }
 #endif
 
 static void audio_process(void *args)
 {
     struct audio_entry *var = NULL;
-    
+
     if (audio_start_flag == 0)
     {
         return;
@@ -559,7 +560,7 @@ static void audio_process(void *args)
     #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2 )
     audio_info_update_5089();
     #endif
-        
+
     if (audio_info.update_bits)
     {
         TAILQ_FOREACH(var, &g_audio_queue, entry)
@@ -639,7 +640,7 @@ int LightService_audio_manager_start(audio_para_t para)
     #elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
     audio_manager_start_5089(para);
     #endif
-    
+
     return 0;
 }
 
