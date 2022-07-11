@@ -230,6 +230,26 @@ static const gatt_attribute_t g_govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] 
 };
 
 
+static void ble_ota_event_callback(uint8_t event);
+
+static ota_state_e ble_ota_state_get(void)
+{
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    return app_otas_get_status();
+#else
+    /* To be complete */
+#endif
+}
+
+static void ble_ota_init(void)
+{
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    app_ota_init(ble_ota_event_callback);
+#else
+        /* To be complete */
+#endif
+}
+
 static void ble_address_get(mac_addr_t *addr)
 {
 #if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
@@ -487,7 +507,7 @@ static void ble_gap_event_callback(gap_event_t* p_event)
 static void ble_link_check(void)
 {
     static uint32_t link_check_tick = 0;
-    ota_state_e state = app_otas_get_status();
+    ota_state_e state = ble_ota_state_get();
 
     if (LightSdk_time_system_tick_get() < link_check_tick)
     {
@@ -838,7 +858,7 @@ int LightService_ble_manager_init(ble_config_t* pt_ble, size_t size)
     LightRuntime_event_task_register(&g_ble_task_event_id, ble_event_task, NULL);
     BLE_TASK_INIT_CHECK;
 
-    app_ota_init(ble_ota_event_callback);
+    ble_ota_init();
     ota_gatt_add_service();
 
     return 0;

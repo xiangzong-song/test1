@@ -10,6 +10,7 @@
 #include "driver_system.h"
 #include "button_manager.h"
 #include "log.h"
+#include "platform.h"
 
 
 #define BUTTON_COUNT_MAX                    8
@@ -60,6 +61,15 @@ static const char *g_button_type_str[] =
     "BUTTON_COMB_LONG_LONG_RELEASED",
 };
 
+
+static void button_mux_set(enum system_port_t port, enum system_port_bit_t bit, enum pmu_gpio_mux_t func)
+{
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    pmu_set_port_mux(port, bit, func);
+#else
+    pmu_port_set_mux(port, bit, func);
+#endif
+}
 
 static int button_task_process(os_event_t *param)
 {
@@ -128,7 +138,7 @@ int LightService_button_manager_init(button_config_t* buttons, int count)
     for (i = 0; i < g_button_count; i++)
     {
         pmu_set_pin_to_PMU(gt_button_table[i].port, 1 << gt_button_table[i].bits);
-        pmu_set_port_mux(gt_button_table[i].port, gt_button_table[i].bits, PMU_PORT_MUX_KEYSCAN);
+        button_mux_set(gt_button_table[i].port, gt_button_table[i].bits, PMU_PORT_MUX_KEYSCAN);
         pmu_set_pin_pull(gt_button_table[i].port, 1 << gt_button_table[i].bits, true);
         button_mask |= GPIO2PORT(gt_button_table[i].port, gt_button_table[i].bits);
     }
