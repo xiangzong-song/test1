@@ -45,6 +45,7 @@ else
         cp $PLATFORM_HEADER_FILES ../../${PLATFORM_8016_INC}
         cd $CURRENT_PATH
         ./sdk_build.sh FR5089
+	PLATFORM_HEADER_FILES+=" ipc_manager.h"
         rm ${PLATFORM_5089_INC}/*.h
         rm ${PLATFORM_5089_LIB}/*.a
         cp build/*.a $PLATFORM_5089_LIB
