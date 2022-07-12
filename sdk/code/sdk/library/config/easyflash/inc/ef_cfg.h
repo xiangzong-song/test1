@@ -28,11 +28,13 @@
 
 #ifndef EF_CFG_H_
 #define EF_CFG_H_
+
+#include "platform.h"
 /* using ENV function, default is NG (Next Generation) mode start from V4.0 */
 #define EF_USING_ENV
 
 #define EF_CONFIG_AREA_COUNT     3
-#define EF_CONFIG_ADDR_BASE      (0x74000)
+#define EF_CONFIG_ADDR_BASE      EASYFLASH_DATA_ADDR_BASE
 
 
 #ifdef EF_USING_ENV

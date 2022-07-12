@@ -90,7 +90,7 @@ int LightSdk_config_env_reset(uint8_t reboot)
 
 int LightSdk_config_data_write(config_type_e type, uint32_t addr, uint8_t* data, size_t len)
 {
-    uint32_t address[4] = {0x77000, 0x78000, 0x79000, 0x7a000};
+    uint32_t address[4] = {DEVICE_SKU_ADDR_DEFAULT, DEVICE_UUID_ADDR_DEFAULT, DEVICE_PAIR_DATA_ADDR_DEFAULT, DEVICE_AGING_FLAG_ADDR_DEFAULT};
     uint32_t addr_base = 0x00;
     uint8_t buffer[64] = {0};
     size_t check_size = (len > 64) ? 64 : len;
@@ -127,7 +127,7 @@ int LightSdk_config_data_write(config_type_e type, uint32_t addr, uint8_t* data,
 
 int LightSdk_config_data_read(config_type_e type, uint32_t addr, uint8_t* data, size_t len)
 {
-    uint32_t address[4] = {0x77000, 0x78000, 0x79000, 0x7a000};
+    uint32_t address[4] = {DEVICE_SKU_ADDR_DEFAULT, DEVICE_UUID_ADDR_DEFAULT, DEVICE_PAIR_DATA_ADDR_DEFAULT, DEVICE_AGING_FLAG_ADDR_DEFAULT};
     uint32_t addr_base = 0x00;
 
     if (type == DEVICE_CUSTOM_DATA && addr == DATA_ADDR_DEFAULT)
@@ -144,7 +144,7 @@ int LightSdk_config_data_read(config_type_e type, uint32_t addr, uint8_t* data, 
 
 int LightSdk_config_data_erase(config_type_e type, uint32_t addr, size_t len)
 {
-    uint32_t address[4] = {0x77000, 0x78000, 0x79000, 0x7a000};
+    uint32_t address[4] = {DEVICE_SKU_ADDR_DEFAULT, DEVICE_UUID_ADDR_DEFAULT, DEVICE_PAIR_DATA_ADDR_DEFAULT, DEVICE_AGING_FLAG_ADDR_DEFAULT};
     uint32_t addr_base = 0x00;
 
     if (len % 0x1000 != 0)
@@ -155,7 +155,7 @@ int LightSdk_config_data_erase(config_type_e type, uint32_t addr, size_t len)
 
     if (addr != DATA_ADDR_DEFAULT)
     {
-        if (addr % 0x1000 != 0 || addr < 0x77000 || addr >= 0x7d000)
+        if (addr % 0x1000 != 0 || addr < DEVICE_SKU_ADDR_DEFAULT || addr >= BLE_BONDING_INFO_ADDR)
         {
             SDK_PRINT(LOG_ERROR, "Wrong erase flash address : %08x.\r\n", addr);
             return -1;
