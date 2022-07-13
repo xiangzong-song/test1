@@ -5,11 +5,13 @@
 #include "driver_ssp.h"
 #include "driver_gpio.h"
 #include "driver_pwm.h"
+#include "driver_system.h"
 #include "sys_utils.h"
 #include "device_time.h"
 #include "runtime.h"
 #include "log.h"
 #include "led.h"
+#include "platform.h"
 
 
 #define LED_PIN_FUNC_SSP_OUT            0x04
@@ -53,6 +55,16 @@ static uint8_t* g_iic_data = NULL;
 
 static int led_data_format(uint8_t* data, int len, uint8_t* buffer, uint8_t duty_0, uint8_t duty_1);
 
+
+__attribute__((section("ram_code"))) void led_spi_data_fill(uint8_t* data, int len)
+{
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
+    ssp_put_data_to_fifo(data, len);
+#elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+    ssp_put_16bit_data_to_fifo(data, len);
+#endif
+}
+
 __attribute__((section("ram_code"))) void ssp_isr_ram(void)
 {
     uint8_t spi_data[64] = {0};
@@ -68,14 +80,14 @@ __attribute__((section("ram_code"))) void ssp_isr_ram(void)
         if ((g_send_index + 8) >= total)
         {
             len = led_data_format(gt_color_now.rgb + g_send_index, total - g_send_index, spi_data, duty_0, duty_1);
-            ssp_put_data_to_fifo(spi_data, len);
+            led_spi_data_fill(spi_data, len);
             NVIC_DisableIRQ(SSP_IRQn);
             g_led_state = LED_FREE;
         }
         else
         {
             led_data_format(gt_color_now.rgb + g_send_index, 8, spi_data, duty_0, duty_1);
-            ssp_put_data_to_fifo(spi_data, 64);
+            led_spi_data_fill(spi_data, 64);
             g_send_index += 8;
         }
     }
@@ -514,7 +526,14 @@ int LightSdk_led_init(led_param_t* param)
     if (gt_led_params.led_rgb_type == LED_RGB_SPI)
     {
         system_set_port_mux(gt_led_params.spi_port, gt_led_params.spi_bit, LED_PIN_FUNC_SSP_OUT);
+#if (PLATFORM_TYPE_ID == PLATFORM_FR8016HA)
         ssp_init_(8, SSP_FRAME_MOTO, SSP_MASTER_MODE, gt_led_params.spi_speed, 2, NULL);
+#elif (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+        system_regs->clk_gate.ssp_clk_en = 1;
+        system_regs->clk_gate.ssim_clk_en = 1;
+        system_regs->clk_gate.gpio_clk_en = 1;
+        ssp_init_(16, SSP_FRAME_MOTO, SSP_MASTER_MODE, gt_led_params.spi_speed, 2, NULL);
+#endif
     }
     else
     {
