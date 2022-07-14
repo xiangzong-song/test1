@@ -3,6 +3,7 @@
 #include <string.h>
 #include "driver_iomux.h"
 #include "driver_pmu.h"
+#include "driver_plf.h"
 #include "os_task.h"
 #include "os_mem.h"
 #include "button.h"
@@ -145,6 +146,10 @@ int LightService_button_manager_init(button_config_t* buttons, int count)
 
     pmu_port_wakeup_func_set(button_mask);
     button_init(button_mask, g_button_task);
+#if (PLATFORM_TYPE_ID == PLATFORM_FR5089D2)
+    ool_write(0xb0,ool_read(0xb0) | 0x80);
+    NVIC_EnableIRQ(PMU_IRQn);
+#endif
 
     BUTTON_TASK_INIT_CHECK;
 
